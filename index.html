@@ -67,12 +67,12 @@ section{padding:56px 0; border-bottom:1px solid var(--line);}
 .proj-filter button{background:transparent; border:1px solid var(--line); color:var(--ink-dim); padding:6px 12px; cursor:pointer; border-radius:2px;}
 .proj-filter button.active{border-color:var(--accent); color:var(--accent);}
 .projects{display:grid; grid-template-columns:1fr; gap:14px;}
-.proj-card{border:1px solid var(--line); background:var(--panel); padding:20px; position:relative; cursor:pointer;}
+.proj-card{border:1px solid var(--line); background:var(--panel); padding:20px; position:relative; cursor:pointer; transition:border-color 0.3s ease, background-color 0.3s ease;}
 .proj-card::before, .proj-card::after{content:""; position:absolute; width:8px; height:8px; border:1px solid var(--accent2); opacity:0.6;}
 .proj-card::before{top:-1px; left:-1px; border-right:none; border-bottom:none;}
 .proj-card::after{bottom:-1px; right:-1px; border-left:none; border-top:none;}
-.proj-top{display:flex; justify-content:space-between; gap:12px; align-items:flex-start;}
-.proj-title{font-weight:600; font-size:1.05rem;}
+.proj-top{display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap;}
+.proj-title{font-weight:600; font-size:1.05rem; min-width:0; overflow-wrap:anywhere;}
 .status{font-family:var(--font-mono); font-size:0.72rem; padding:2px 8px; border:1px solid; white-space:nowrap; border-radius:2px;}
 .status.active{color:var(--accent2); border-color:var(--accent2);}
 .status.done{color:var(--ink-dim); border-color:var(--ink-dim);}
@@ -80,8 +80,9 @@ section{padding:56px 0; border-bottom:1px solid var(--line);}
 .proj-summary{color:var(--ink-dim); margin-top:8px; font-size:0.92rem;}
 .stack{display:flex; gap:6px; flex-wrap:wrap; margin-top:14px; font-family:var(--font-mono); font-size:0.7rem;}
 .stack span{border:1px solid var(--line); color:var(--ink-dim); padding:2px 7px;}
-.proj-detail{max-height:0; overflow:hidden; transition:max-height 0.25s ease;}
-.proj-card.open .proj-detail{max-height:400px; margin-top:14px; padding-top:14px; border-top:1px solid var(--line);}
+.proj-detail{display:grid; grid-template-rows:0fr; max-height:none; margin-top:0; padding-top:0; border-top:1px solid transparent; overflow:hidden; transition:grid-template-rows 0.35s ease, margin-top 0.35s ease, padding-top 0.35s ease, border-color 0.35s ease;}
+.proj-detail > div{min-height:0; overflow:hidden;}
+.proj-card.open .proj-detail{grid-template-rows:1fr; margin-top:14px; padding-top:14px; border-top-color:var(--line);}
 .proj-detail p{color:var(--ink-dim); font-size:0.9rem; margin-bottom:8px;}
 .proj-detail a{font-family:var(--font-mono); font-size:0.8rem;}
 
@@ -169,9 +170,8 @@ footer{padding:28px 0 40px; text-align:center; color:var(--ink-dim); font-family
     <div class="contact">
       <p>Open to collaborations, questions about a build, or just talking through a weird engineering problem.</p>
       <div class="contact-links">
-        <a href="mailto:jordan@example.com">jordan@example.com</a>
-        <a href="#">github.com/jreyes</a>
-        <a href="#">linkedin.com/in/jreyes</a>
+        <a href="mailto:jordan@example.com">jainavaneeth@gmail.com</a>
+        <a href="#">https://github.com/CodingJackalNoob</a>
       </div>
     </div>
   </section>
@@ -254,8 +254,10 @@ function renderProjects(filter){
         <div class="proj-summary">${p.summary}</div>
         <div class="stack">${p.stack.map(s=>`<span>${s}</span>`).join('')}</div>
         <div class="proj-detail">
-          <p>${p.detail}</p>
-          <a href="${p.link}">View related updates →</a>
+          <div>
+            <p>${p.detail}</p>
+            <a href="${p.link}">View related updates →</a>
+          </div>
         </div>
       </div>`).join('');
   projList.querySelectorAll('.proj-card').forEach(card=>{
