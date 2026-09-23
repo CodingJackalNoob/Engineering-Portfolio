@@ -44,11 +44,63 @@ header.titleblock{
   padding-top:env(safe-area-inset-top,0px);
 }
 .tb-row{max-width:880px; margin:0 auto; padding:14px 24px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;}
+.tb-actions{display:flex; align-items:center; gap:12px;}
 .tb-name{font-weight:600; font-size:1rem; letter-spacing:0.2px;}
 .tb-name span{color:var(--ink-dim); font-family:var(--font-mono); font-size:0.78rem; display:block; margin-top:2px;}
 nav{display:flex; gap:18px; font-family:var(--font-mono); font-size:0.82rem;}
 nav a{color:var(--ink-dim); text-decoration:none; border-bottom:1px solid transparent; padding-bottom:2px;}
 nav a:hover{color:var(--ink); border-color:var(--accent);}
+.admin-trigger,.admin-action,.modal-actions button{font-family:var(--font-mono); font-size:0.75rem; border:1px solid var(--line); background:transparent; color:var(--ink-dim); padding:7px 11px; cursor:pointer; border-radius:2px;}
+.admin-trigger:hover,.admin-action:hover,.modal-actions button:hover{border-color:var(--accent); color:var(--accent);}
+.admin-trigger.active{border-color:var(--accent2); color:var(--accent2);}
+.admin-rail{display:none; border:1px solid var(--accent2); background:rgba(16,28,44,0.94); padding:14px 16px; margin-top:24px; align-items:center; justify-content:space-between; gap:14px;}
+.admin-mode .admin-rail{display:flex;}
+.admin-rail strong{font-size:0.92rem; font-weight:600;}
+.admin-rail span{display:block; color:var(--ink-dim); font-size:0.78rem; margin-top:2px;}
+.admin-actions{display:flex; gap:8px; flex-wrap:wrap;}
+.admin-action.primary{border-color:var(--accent); color:var(--accent);}
+.admin-only{display:none;}
+.admin-mode .admin-only{display:inline-flex;}
+.edit-button{position:static; display:flex; margin:0 0 12px auto;}
+.proj-card .edit-button,.t-item .edit-button,.log-entry .edit-button{position:static;}
+.empty-state{color:var(--ink-dim); font-family:var(--font-mono); font-size:0.8rem; padding:18px 0;}
+.media-preview{width:100%; height:100%; object-fit:cover;}
+.drop-active{border-color:var(--accent2); color:var(--accent2);}
+.modal-backdrop{display:none; position:fixed; inset:0; z-index:30; background:rgba(5,10,16,0.78); align-items:center; justify-content:center; padding:20px;}
+.modal-backdrop.open{display:flex;}
+.modal{width:min(100%,560px); max-height:calc(100vh - 40px); overflow:auto; background:var(--panel); border:1px solid var(--line); padding:24px; box-shadow:0 18px 70px rgba(0,0,0,0.35);}
+.modal-head{display:flex; justify-content:space-between; gap:16px; align-items:start; margin-bottom:20px;}
+.modal h2{font-size:1.15rem; font-weight:600;}
+.modal-kicker{color:var(--accent); font:0.72rem var(--font-mono); margin-bottom:5px;}
+.close-modal{background:none; border:0; color:var(--ink-dim); font-size:1.35rem; cursor:pointer; line-height:1;}
+.form-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+.field{display:flex; flex-direction:column; gap:6px;}
+.field.full{grid-column:1 / -1;}
+.field label{font:0.72rem var(--font-mono); color:var(--ink-dim); text-transform:uppercase;}
+.field input,.field select,.field textarea{width:100%; border:1px solid var(--line); background:var(--bg2); color:var(--ink); padding:9px 10px; font:0.88rem var(--font-body); border-radius:2px;}
+.password-wrap{position:relative;}
+.password-wrap input{padding-right:42px;}
+.password-toggle{position:absolute; top:50%; right:8px; transform:translateY(-50%); border:0; background:transparent; color:var(--ink-dim); cursor:pointer; padding:5px; font-size:1rem; line-height:1;}
+.password-toggle:hover,.password-toggle:focus{color:var(--accent2);}
+.field textarea{min-height:90px; resize:vertical;}
+.field textarea.large{min-height:132px;}
+.field input:focus,.field select:focus,.field textarea:focus{outline:1px solid var(--accent2); border-color:var(--accent2);}
+.status-select{font-family:var(--font-mono)!important; text-transform:uppercase; font-size:0.78rem!important;}
+.status-select.active{color:var(--accent2); border-color:var(--accent2);}
+.status-select.paused{color:var(--accent); border-color:var(--accent);}
+.status-select.done{color:var(--ink-dim); border-color:var(--ink-dim);}
+.tag-editor{display:flex; align-items:center; gap:7px; flex-wrap:wrap; border:1px solid var(--line); background:var(--bg2); padding:8px; min-height:46px;}
+.tag-editor:focus-within{outline:1px solid var(--accent2); border-color:var(--accent2);}
+.tag-chip{display:inline-flex; align-items:center; gap:6px; border:1px solid var(--line); color:var(--accent2); padding:4px 7px; font:0.72rem var(--font-mono);}
+.tag-chip button{border:0; background:none; color:var(--ink-dim); cursor:pointer; padding:0; font-size:0.9rem; line-height:1;}
+.tag-input{flex:1; min-width:120px; border:0!important; background:transparent!important; padding:4px!important; outline:0!important;}
+.tag-add{border:1px solid var(--line); background:transparent; color:var(--ink-dim); padding:5px 8px; cursor:pointer; font:0.7rem var(--font-mono);}
+.tag-add:hover{border-color:var(--accent); color:var(--accent);}
+.modal-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:22px;}
+.modal-actions .save{background:var(--accent); border-color:var(--accent); color:#101820; font-weight:600;}
+.modal-actions .danger{margin-right:auto; color:var(--accent); border-color:var(--accent);}
+.video-drop{border:1px dashed var(--line); padding:14px; color:var(--ink-dim); font:0.75rem var(--font-mono); cursor:pointer;}
+.video-drop input{display:none;}
 
 /* Hero */
 .hero{padding:72px 0 56px; border-bottom:1px solid var(--line);}
@@ -112,6 +164,7 @@ section{padding:56px 0; border-bottom:1px solid var(--line);}
 footer{padding:28px 0 40px; text-align:center; color:var(--ink-dim); font-family:var(--font-mono); font-size:0.75rem;}
 
 @media (max-width:640px){ nav{display:none;} .tb-row{padding:12px 18px;} }
+@media (max-width:560px){.admin-rail{align-items:flex-start; flex-direction:column;}.form-grid{grid-template-columns:1fr;}.field.full{grid-column:auto;}.modal{padding:18px;}}
 </style>
 </head>
 <body>
@@ -119,12 +172,13 @@ footer{padding:28px 0 40px; text-align:center; color:var(--ink-dim); font-family
 <header class="titleblock">
   <div class="tb-row">
     <div class="tb-name">JORDAN REYES <span>MECHANICAL + EMBEDDED SYSTEMS — PORTFOLIO / LOG</span></div>
-    <nav>
+    <div class="tb-actions">
+      <nav>
       <a href="#projects">Projects</a>
-      <a href="#timeline">Timeline</a>
-      <a href="#updates">Updates</a>
       <a href="#contact">Contact</a>
-    </nav>
+      </nav>
+      <button class="admin-trigger" id="adminTrigger" type="button">Admin login</button>
+    </div>
   </div>
 </header>
 
@@ -136,6 +190,14 @@ footer{padding:28px 0 40px; text-align:center; color:var(--ink-dim); font-family
     <p>A running record of projects — mechanical builds, embedded systems, and the odd overambitious weekend project. Browse the work, follow the timeline, or read the build log for day-to-day notes and video updates.</p>
   </section>
 
+  <div class="admin-rail" id="adminRail">
+    <div><strong>Admin mode</strong><span>Changes are saved in this browser only.</span></div>
+    <div class="admin-actions">
+      <button class="admin-action primary" data-add="project" type="button">+ Add card</button>
+      <button class="admin-action" id="signOut" type="button">Sign out</button>
+    </div>
+  </div>
+
   <section id="projects">
     <div class="sec-head">
       <h2>Projects</h2>
@@ -143,23 +205,6 @@ footer{padding:28px 0 40px; text-align:center; color:var(--ink-dim); font-family
     </div>
     <div class="proj-filter mono" id="projFilter"></div>
     <div class="projects" id="projList"></div>
-  </section>
-
-  <section id="timeline">
-    <div class="sec-head">
-      <h2>Timeline</h2>
-      <div class="sheet-no mono">SHEET 02 / MILESTONES</div>
-    </div>
-    <div class="timeline" id="timelineList"></div>
-  </section>
-
-  <section id="updates">
-    <div class="sec-head">
-      <h2>Build Log</h2>
-      <div class="sheet-no mono">SHEET 03 / UPDATES</div>
-    </div>
-    <div class="log-filter mono" id="logFilter"></div>
-    <div id="logList"></div>
   </section>
 
   <section id="contact">
@@ -179,6 +224,13 @@ footer{padding:28px 0 40px; text-align:center; color:var(--ink-dim); font-family
 </main>
 
 <footer>REV A — LAST UPDATED SEP 2026</footer>
+
+<div class="modal-backdrop" id="modalBackdrop" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-head"><div><div class="modal-kicker" id="modalKicker">ADMIN EDITOR</div><h2 id="modalTitle">Sign in</h2></div><button class="close-modal" id="closeModal" type="button" aria-label="Close">×</button></div>
+    <form id="adminForm"></form>
+  </div>
+</div>
 
 <script>
 // ============ EDIT YOUR CONTENT HERE ============
@@ -241,82 +293,138 @@ const projFilter = document.getElementById('projFilter');
 const logList = document.getElementById('logList');
 const logFilter = document.getElementById('logFilter');
 const timelineList = document.getElementById('timelineList');
+const modalBackdrop = document.getElementById('modalBackdrop');
+const adminForm = document.getElementById('adminForm');
+const modalTitle = document.getElementById('modalTitle');
+const modalKicker = document.getElementById('modalKicker');
+let isAdmin = false;
+let activeProjectFilter = 'all';
+let activeLogFilter = 'all';
+
+function loadData(key, fallback){
+  try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch { return fallback; }
+}
+const savedProjects = loadData('engineering-projects', PROJECTS);
+const savedTimeline = loadData('engineering-timeline', TIMELINE);
+const savedUpdates = loadData('engineering-updates', UPDATES);
+PROJECTS.splice(0, PROJECTS.length, ...savedProjects);
+TIMELINE.splice(0, TIMELINE.length, ...savedTimeline);
+UPDATES.splice(0, UPDATES.length, ...savedUpdates);
+
+function esc(value){
+  return String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+}
+function saveData(){
+  localStorage.setItem('engineering-projects', JSON.stringify(PROJECTS));
+  localStorage.setItem('engineering-timeline', JSON.stringify(TIMELINE));
+  localStorage.setItem('engineering-updates', JSON.stringify(UPDATES));
+}
+function refresh(){ renderFilters(); renderProjects(activeProjectFilter); renderLog(activeLogFilter); renderTimeline(); }
 
 function renderProjects(filter){
-  projList.innerHTML = PROJECTS
-    .filter(p => filter==='all' || p.id===filter)
-    .map(p => `
-      <div class="proj-card" data-id="${p.id}">
-        <div class="proj-top">
-          <div class="proj-title">${p.title}</div>
-          <div class="status ${p.status} mono">${p.status.toUpperCase()}</div>
-        </div>
-        <div class="proj-summary">${p.summary}</div>
-        <div class="stack">${p.stack.map(s=>`<span>${s}</span>`).join('')}</div>
-        <div class="proj-detail">
-          <div>
-            <p>${p.detail}</p>
-            <a href="${p.link}">View related updates →</a>
-          </div>
-        </div>
-      </div>`).join('');
-  projList.querySelectorAll('.proj-card').forEach(card=>{
-    card.addEventListener('click', ()=> card.classList.toggle('open'));
-  });
+  const visible = PROJECTS.filter(p => filter==='all' || p.id===filter);
+  projList.innerHTML = visible.length ? visible.map(p => `
+    <div class="proj-card" data-id="${esc(p.id)}">
+      ${isAdmin ? `<button class="admin-only admin-action edit-button" data-edit="project" data-id="${esc(p.id)}" type="button">Edit</button>` : ''}
+      <div class="proj-top"><div class="proj-title">${esc(p.title)}</div><div class="status ${esc(p.status)} mono">${esc(p.status).toUpperCase()}</div></div>
+      <div class="proj-summary">${esc(p.summary)}</div>
+      <div class="stack">${p.stack.map(s=>`<span>${esc(s)}</span>`).join('')}</div>
+      <div class="proj-detail"><div><p>${esc(p.detail)}</p><a href="project.html?id=${encodeURIComponent(p.id)}">View project page →</a></div></div>
+    </div>`).join('') : '<div class="empty-state">No cards in this view.</div>';
+  projList.querySelectorAll('.proj-card').forEach(card=>card.addEventListener('click', event=>{
+    if (!event.target.closest('button')) card.classList.toggle('open');
+  }));
+  projList.querySelectorAll('[data-edit]').forEach(button=>button.addEventListener('click', ()=>openEditor('project', button.dataset.id)));
 }
 
 function renderFilters(){
   const ids = ['all', ...PROJECTS.map(p=>p.id)];
-  projFilter.innerHTML = ids.map(id=>{
-    const label = id==='all' ? 'ALL' : PROJECTS.find(p=>p.id===id).title.replace(/\[|\]/g,'').toUpperCase();
-    return `<button data-f="${id}" class="${id==='all'?'active':''}">${label}</button>`;
-  }).join('');
-  logFilter.innerHTML = ids.map(id=>{
-    const label = id==='all' ? 'ALL' : PROJECTS.find(p=>p.id===id).title.replace(/\[|\]/g,'').toUpperCase();
-    return `<button data-f="${id}" class="${id==='all'?'active':''}">${label}</button>`;
-  }).join('');
-
-  projFilter.querySelectorAll('button').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      projFilter.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      renderProjects(btn.dataset.f);
-    });
-  });
-  logFilter.querySelectorAll('button').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      logFilter.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      renderLog(btn.dataset.f);
-    });
-  });
+  const labelFor = id => id==='all' ? 'ALL' : esc(PROJECTS.find(p=>p.id===id)?.title.replace(/\[|\]/g,'').toUpperCase());
+  projFilter.innerHTML = ids.map(id=>`<button data-f="${esc(id)}" class="${id===activeProjectFilter?'active':''}">${labelFor(id)}</button>`).join('');
+  if (!logFilter) return;
+  logFilter.innerHTML = ids.map(id=>`<button data-f="${esc(id)}" class="${id===activeLogFilter?'active':''}">${labelFor(id)}</button>`).join('');
+  projFilter.querySelectorAll('button').forEach(btn=>btn.addEventListener('click', ()=>{ activeProjectFilter=btn.dataset.f; renderFilters(); renderProjects(activeProjectFilter); }));
+  logFilter.querySelectorAll('button').forEach(btn=>btn.addEventListener('click', ()=>{ activeLogFilter=btn.dataset.f; renderFilters(); renderLog(activeLogFilter); }));
 }
 
 function renderLog(filter){
-  logList.innerHTML = UPDATES
-    .filter(u => filter==='all' || u.project===filter)
-    .map(u => `
-      <div class="log-entry">
-        <div class="rev mono">${u.rev}</div>
-        <h3>${u.title}</h3>
-        <div class="body">${u.body}</div>
-        ${u.hasMedia ? `<div class="log-media mono">VIDEO PLACEHOLDER — drop an &lt;iframe&gt; or &lt;video&gt; here</div>` : ''}
-      </div>`).join('');
+  if (!logList) return;
+  const visible = UPDATES.filter(u => filter==='all' || u.project===filter);
+  logList.innerHTML = visible.length ? visible.map(u => `
+    <div class="log-entry">
+      ${isAdmin ? `<button class="admin-only admin-action edit-button" data-edit="update" data-id="${esc(u.id)}" type="button">Edit</button>` : ''}
+      <div class="rev mono">${esc(u.rev)}</div><h3>${esc(u.title)}</h3><div class="body">${esc(u.body)}</div>
+      ${u.hasMedia ? `<div class="log-media mono">${u.videoUrl ? `<video class="media-preview" controls src="${esc(u.videoUrl)}"></video>` : 'VIDEO PLACEHOLDER — add a URL or drop a video in admin mode'}</div>` : ''}
+    </div>`).join('') : '<div class="empty-state">No updates in this view.</div>';
+  logList.querySelectorAll('[data-edit]').forEach(button=>button.addEventListener('click', ()=>openEditor('update', button.dataset.id)));
 }
 
 function renderTimeline(){
-  timelineList.innerHTML = TIMELINE.map(t=>`
+  if (!timelineList) return;
+  timelineList.innerHTML = TIMELINE.length ? TIMELINE.map((t, index)=>`
     <div class="t-item">
-      <div class="t-date mono">${t.date}</div>
-      <div class="t-title">${t.title}</div>
-      <div class="t-body">${t.body}</div>
-    </div>`).join('');
+      ${isAdmin ? `<button class="admin-only admin-action edit-button" data-edit="timeline" data-index="${index}" type="button">Edit</button>` : ''}
+      <div class="t-date mono">${esc(t.date)}</div><div class="t-title">${esc(t.title)}</div><div class="t-body">${esc(t.body)}</div>
+    </div>`).join('') : '<div class="empty-state">No milestones yet.</div>';
+  timelineList.querySelectorAll('[data-edit]').forEach(button=>button.addEventListener('click', ()=>openEditor('timeline', button.dataset.index)));
 }
 
-renderFilters();
-renderProjects('all');
-renderLog('all');
-renderTimeline();
+function openModal(){ modalBackdrop.classList.add('open'); modalBackdrop.setAttribute('aria-hidden','false'); }
+function closeModal(){ modalBackdrop.classList.remove('open'); modalBackdrop.setAttribute('aria-hidden','true'); adminForm.reset(); }
+function field(label, name, value='', type='text', full=false){ return `<div class="field${full?' full':''}"><label for="${name}">${label}</label><input id="${name}" name="${name}" type="${type}" value="${esc(value)}" required></div>`; }
+function textAreaField(label, name, value='', full=true){ return `<div class="field${full?' full':''}"><label for="${name}">${label}</label><textarea class="large" id="${name}" name="${name}" required>${esc(value)}</textarea></div>`; }
+function statusField(value='active'){ return `<div class="field"><label for="status">Activity</label><select class="status-select ${esc(value)}" id="status" name="status" required><option value="active" ${value==='active'?'selected':''}>ACTIVE</option><option value="paused" ${value==='paused'?'selected':''}>PAUSED</option><option value="done" ${value==='done'?'selected':''}>DONE</option></select></div>`; }
+function tagEditor(tags=[]){ return `<div class="field full"><label for="tagInput">Tags</label><div class="tag-editor" id="tagEditor">${tags.map(tag=>`<span class="tag-chip" data-tag="${esc(tag)}">${esc(tag)}<button type="button" aria-label="Remove ${esc(tag)}">×</button></span>`).join('')}<input class="tag-input" id="tagInput" type="text" aria-label="Add a tag" placeholder="Add a tag"><button class="tag-add" id="addTag" type="button">Add</button></div><input id="tags" name="tags" type="hidden" value="${esc(tags.join(', '))}"></div>`; }
+function openLogin(){
+  modalKicker.textContent='PRIVATE WORKSPACE'; modalTitle.textContent='Admin sign in';
+  adminForm.innerHTML=`<div class="form-grid">${field('Username','username')}<div class="field"><label for="password">Password</label><div class="password-wrap"><input id="password" name="password" type="password" required><button class="password-toggle" id="passwordToggle" type="button" aria-label="Show password" title="Show password">◉</button></div></div></div><div class="modal-actions"><button class="save" type="submit">Enter admin mode</button></div><p class="empty-state">Demo access: admin / buildlog</p>`;
+  adminForm.dataset.kind='login'; openModal();
+  document.getElementById('passwordToggle').addEventListener('click', event=>{const password=document.getElementById('password'); const visible=password.type==='text'; password.type=visible?'password':'text'; event.currentTarget.textContent=visible?'◉':'○'; event.currentTarget.setAttribute('aria-label',visible?'Show password':'Hide password'); event.currentTarget.setAttribute('title',visible?'Show password':'Hide password');});
+  document.getElementById('username').focus();
+}
+function openEditor(kind, id){
+  if (!isAdmin) return;
+  const item = kind==='project' ? PROJECTS.find(p=>p.id===id) : kind==='update' ? UPDATES.find(u=>u.id===id) : TIMELINE[Number(id)];
+  const editing = Boolean(item); modalKicker.textContent='ADMIN EDITOR';
+  modalTitle.textContent = `${editing?'Edit':'Add'} ${kind==='project'?'project card':kind==='update'?'build update':'timeline milestone'}`;
+  if(kind==='project') adminForm.innerHTML=`<div class="form-grid">${field('Card ID','id',item?.id || `project-${Date.now()}`)}${field('Title','title',item?.title)}${statusField(item?.status || 'active')}${field('Related link','link',item?.link || '#updates')}${textAreaField('Summary','summary',item?.summary)}${tagEditor(item?.stack || [])}${textAreaField('Details','detail',item?.detail)}</div><div class="modal-actions">${editing?'<button class="danger" data-delete="project" type="button">Delete</button>':''}<button class="save" type="submit">Save card</button></div>`;
+  if(kind==='timeline') adminForm.innerHTML=`<div class="form-grid">${field('Date','date',item?.date)}${field('Title','title',item?.title)}${textAreaField('Description','body',item?.body)}</div><div class="modal-actions">${editing?'<button class="danger" data-delete="timeline" type="button">Delete</button>':''}<button class="save" type="submit">Save milestone</button></div>`;
+  if(kind==='update') adminForm.innerHTML=`<div class="form-grid">${field('Project','project',item?.project || PROJECTS[0]?.id)}${field('Revision','rev',item?.rev)}${field('Title','title',item?.title)}${field('Video URL','videoUrl',item?.videoUrl || '','url')} ${field('Notes','body',item?.body,'text',true)}<div class="field full"><label for="videoFile">Video file</label><label class="video-drop" id="videoDrop">Drop a video here or choose a file<input id="videoFile" name="videoFile" type="file" accept="video/*"></label></div><input name="id" type="hidden" value="${esc(item?.id || `update-${Date.now()}`)}"></div><div class="modal-actions">${editing?'<button class="danger" data-delete="update" type="button">Delete</button>':''}<button class="save" type="submit">Save update</button></div>`;
+  adminForm.dataset.kind=kind; adminForm.dataset.index=kind==='timeline' ? id : item?.id || '';
+  openModal();
+  const statusSelect=document.getElementById('status');
+  if(statusSelect) statusSelect.addEventListener('change',()=>{statusSelect.className=`status-select ${statusSelect.value}`;});
+  const tagInput=document.getElementById('tagInput'); const tagList=document.getElementById('tagEditor'); const tagValues=document.getElementById('tags');
+  if(tagInput && tagList && tagValues){
+    const syncTags=()=>{tagValues.value=[...tagList.querySelectorAll('[data-tag]')].map(tag=>tag.dataset.tag).join(', ');};
+    const addTag=()=>{const value=tagInput.value.trim(); if(!value) return; const exists=[...tagList.querySelectorAll('[data-tag]')].some(tag=>tag.dataset.tag.toLowerCase()===value.toLowerCase()); if(exists){tagInput.value=''; return;} const chip=document.createElement('span'); chip.className='tag-chip'; chip.dataset.tag=value; chip.innerHTML=`${esc(value)}<button type="button" aria-label="Remove ${esc(value)}">×</button>`; tagList.insertBefore(chip,tagInput); tagInput.value=''; syncTags();};
+    document.getElementById('addTag').addEventListener('click',addTag); tagInput.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();addTag();}}); tagList.addEventListener('click',event=>{if(event.target.matches('.tag-chip button')){event.target.parentElement.remove();syncTags();}});
+  }
+  const fileInput=document.getElementById('videoFile'); const drop=document.getElementById('videoDrop');
+  if(fileInput){ const useFile=file=>{ if(file){ document.querySelector('[name="videoUrl"]').value=URL.createObjectURL(file); drop.textContent=`Selected: ${file.name}`; } }; fileInput.addEventListener('change',()=>useFile(fileInput.files[0])); drop.addEventListener('dragover',event=>{event.preventDefault();drop.classList.add('drop-active');}); drop.addEventListener('dragleave',()=>drop.classList.remove('drop-active')); drop.addEventListener('drop',event=>{event.preventDefault();drop.classList.remove('drop-active');useFile(event.dataTransfer.files[0]);}); }
+}
+
+document.getElementById('adminTrigger').addEventListener('click', ()=>isAdmin ? document.getElementById('signOut').click() : openLogin());
+document.getElementById('closeModal').addEventListener('click', closeModal);
+modalBackdrop.addEventListener('click', event=>{if(event.target===modalBackdrop) closeModal();});
+document.querySelectorAll('[data-add]').forEach(button=>button.addEventListener('click', ()=>openEditor(button.dataset.add)));
+document.getElementById('signOut').addEventListener('click', ()=>{isAdmin=false; document.body.classList.remove('admin-mode'); document.getElementById('adminTrigger').textContent='Admin login'; document.getElementById('adminTrigger').classList.remove('active'); refresh();});
+adminForm.addEventListener('click', event=>{
+  if(!event.target.dataset.delete) return;
+  const kind=event.target.dataset.delete; const index=kind==='project' ? PROJECTS.findIndex(p=>p.id===adminForm.dataset.index) : kind==='update' ? UPDATES.findIndex(u=>u.id===adminForm.dataset.index) : Number(adminForm.dataset.index);
+  if(kind==='project') PROJECTS.splice(index,1); if(kind==='update') UPDATES.splice(index,1); if(kind==='timeline') TIMELINE.splice(index,1);
+  saveData(); closeModal(); refresh();
+});
+adminForm.addEventListener('submit', event=>{
+  event.preventDefault(); const data=Object.fromEntries(new FormData(adminForm)); const kind=adminForm.dataset.kind;
+  if(kind==='login'){ if(data.username==='admin' && data.password==='buildlog'){isAdmin=true; document.body.classList.add('admin-mode'); document.getElementById('adminTrigger').textContent='Admin active'; document.getElementById('adminTrigger').classList.add('active'); closeModal(); refresh();} else {alert('Invalid admin credentials.');} return; }
+  if(kind==='project'){const value={id:data.id,title:data.title,status:data.status,summary:data.summary,stack:data.tags.split(',').map(tag=>tag.trim()).filter(Boolean),detail:data.detail,link:data.link}; const index=PROJECTS.findIndex(p=>p.id===adminForm.dataset.index); index<0?PROJECTS.push(value):PROJECTS.splice(index,1,value);}
+  if(kind==='timeline'){const value={date:data.date,title:data.title,body:data.body}; const index=Number(adminForm.dataset.index); index>=0?TIMELINE.splice(index,1,value):TIMELINE.push(value);}
+  if(kind==='update'){const value={id:data.id,project:data.project,rev:data.rev,title:data.title,body:data.body,videoUrl:data.videoUrl,hasMedia:Boolean(data.videoUrl)}; const index=UPDATES.findIndex(u=>u.id===adminForm.dataset.index); index<0?UPDATES.push(value):UPDATES.splice(index,1,value);}
+  saveData(); closeModal(); refresh();
+});
+
+renderFilters(); renderProjects('all'); renderLog('all'); renderTimeline();
 </script>
 </body>
 </html>
