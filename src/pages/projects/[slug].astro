@@ -7,14 +7,13 @@ import '../../styles/global.css';
 
 export async function getStaticPaths() {
   const projects = await getCollection('projects');
-  return projects.map((project) => ({
-    params: { slug: project.data.slug ?? project.id },
-    props: { project },
-  }));
+  return projects.map((project) => ({ params: { slug: project.data.slug ?? project.id }, props: { project } }));
 }
 
 const { project } = Astro.props;
-const { Content } = await render(project);
+const { Content, headings } = await render(project);
+const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+const formattedDate = project.data.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
 ---
 
 <BaseLayout title={`${project.data.title} — Jainavaneeth Kumarashankar`} description={project.data.description} image={project.data.coverImage}>
@@ -22,44 +21,31 @@ const { Content } = await render(project);
   <main id="main-content" class="wrap">
     <article>
       <header class="detail-hero">
-        <div class="eyebrow">// {project.data.category}</div>
+        <div class="eyebrow">// {project.data.category} / case study</div>
         <h1>{project.data.title}</h1>
-        <p>{project.data.description}</p>
-        <div class="article-meta">
-          <span class:list={['status mono', project.data.status.toLowerCase()]}>{project.data.status}</span>
-          {project.data.technologies.map((technology) => <span class="tag">{technology}</span>)}
+        <p>{project.data.overview ?? project.data.description}</p>
+        <div class="article-meta"><span class:list={['status', project.data.status.toLowerCase().replace(' ', '-')] }>{project.data.status}</span><time datetime={project.data.date.toISOString()}>{formattedDate}</time>{project.data.updatedDate && <span>Updated {project.data.updatedDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' })}</span>}</div>
+        <div class="tags">{project.data.technologies.map((technology) => <span class="tag">{technology}</span>)}</div>
+        <div class="cover">
+          {project.data.coverImage ? <img src={project.data.coverImage} alt={project.data.coverAlt ?? `${project.data.title} project cover`} fetchpriority="high" /> : <div class="media-fallback" aria-hidden="true">PROJECT RENDER / DOCUMENTATION IN PROGRESS</div>}
         </div>
-        {project.data.coverImage ? (
-          <div class="cover"><img src={project.data.coverImage} alt={project.data.coverAlt ?? `${project.data.title} project cover`} /></div>
-        ) : (
-          <div class="cover" role="img" aria-label={`No cover image available for ${project.data.title}`}>NO COVER IMAGE / PROJECT RENDER PENDING</div>
-        )}
       </header>
-      <div class="article"><Content /></div>
+      <div class="detail-layout">
+        <div class="article"><Content /></div>
+        <aside class="detail-aside" aria-label="Project reference">
+          {toc.length > 0 && <nav class="toc" aria-label="On this page"><strong class="eyebrow">On this page</strong><ul>{toc.map((heading) => <li><a href={`#${heading.slug}`}>{heading.text}</a></li>)}</ul></nav>}
+          <div class="aside-panel"><h2>Project record</h2><dl><dt>Category</dt><dd>{project.data.category}</dd><dt>Status</dt><dd>{project.data.status}</dd><dt>Started</dt><dd>{formattedDate}</dd></dl></div>
+          <div class="aside-panel"><h2>Tools &amp; technologies</h2><div class="tags">{project.data.technologies.map((technology) => <span class="tag">{technology}</span>)}</div></div>
+          {(project.data.links.github || project.data.links.documentation || project.data.links.video || project.data.links.external) && <div class="aside-panel"><h2>Resources</h2><div class="resource-links">
+            {project.data.links.github && <a href={project.data.links.github} target="_blank" rel="noopener noreferrer">GitHub ↗</a>}
+            {project.data.links.documentation && <a href={project.data.links.documentation} target="_blank" rel="noopener noreferrer">Reference documentation ↗</a>}
+            {project.data.links.video && <a href={project.data.links.video} target="_blank" rel="noopener noreferrer">Video ↗</a>}
+            {project.data.links.external && <a href={project.data.links.external} target="_blank" rel="noopener noreferrer">External resource ↗</a>}
+          </div></div>}
+        </aside>
+      </div>
     </article>
-
-    {project.data.images.length > 0 && (
-      <section>
-        <div class="sec-head"><h2>Gallery</h2><span class="sheet-no">PROJECT MEDIA</span></div>
-        <div class="grid">
-          {project.data.images.map((image) => (
-            <figure class="card"><img src={image.src} alt={image.alt} style="width:100%;height:auto" />{image.caption && <figcaption>{image.caption}</figcaption>}</figure>
-          ))}
-        </div>
-      </section>
-    )}
-
-    {(project.data.links.github || project.data.links.documentation || project.data.links.video || project.data.links.external) && (
-      <section>
-        <div class="sec-head"><h2>Resources</h2><span class="sheet-no">EXTERNAL LINKS</span></div>
-        <div class="button-row">
-          {project.data.links.github && <a class="button" href={project.data.links.github} target="_blank" rel="noopener noreferrer">GitHub</a>}
-          {project.data.links.documentation && <a class="button" href={project.data.links.documentation} target="_blank" rel="noopener noreferrer">Documentation</a>}
-          {project.data.links.video && <a class="button" href={project.data.links.video} target="_blank" rel="noopener noreferrer">Video</a>}
-          {project.data.links.external && <a class="button" href={project.data.links.external} target="_blank" rel="noopener noreferrer">External resource</a>}
-        </div>
-      </section>
-    )}
+    {project.data.images.length > 0 && <section class="detail-gallery"><div class="sec-head"><h2>Build documentation</h2><span class="sheet-no">PROJECT MEDIA</span></div><div class="grid">{project.data.images.map((image) => <figure class="card" style="padding:12px"><img src={image.src} alt={image.alt} loading="lazy" />{image.caption && <figcaption>{image.caption}</figcaption>}</figure>)}</div></section>}
   </main>
   <Footer />
 </BaseLayout>

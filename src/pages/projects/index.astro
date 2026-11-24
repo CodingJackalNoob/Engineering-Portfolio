@@ -6,39 +6,33 @@ import { getCollection } from 'astro:content';
 import '../../styles/global.css';
 
 const projects = (await getCollection('projects')).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
-const categories = ['All', ...Array.from(new Set(projects.map((project) => project.data.category)))];
+const categoryList = ['Robotics', 'Mechanical Design', 'PCB Design', 'Embedded Systems', 'Software', 'Research & Experiments'];
+const categories = ['All', ...categoryList];
 ---
 
 <BaseLayout title="Projects — Jainavaneeth Kumarashankar" description="Engineering projects across robotics, mechanical design, embedded systems, PCB design, software, and research.">
   <Header />
   <main id="main-content" class="wrap">
-    <section class="hero">
-      <div class="eyebrow">// project index</div>
-      <h1>Engineering projects</h1>
-      <p>Mechanical builds, robotics, embedded systems, electronics, and software documented from concept to implementation.</p>
-    </section>
+    <section class="hero"><div class="eyebrow">// project index</div><h1>Built to move ideas forward.</h1><p>Mechanical builds, robotics, embedded systems, electronics, and software documented from concept to implementation.</p></section>
     <section>
-      <div class="sec-head"><h2>All projects</h2><span class="sheet-no">{projects.length.toString().padStart(2, '0')} ENTRIES</span></div>
+      <div class="sec-head"><h2>Project archive</h2><span class="sheet-no">{projects.length.toString().padStart(2, '0')} STUDIES</span></div>
       <div class="filters" aria-label="Filter projects by category">
-        {categories.map((category, index) => (
-          <button class:list={['filter-button', { active: index === 0 }]} data-project-filter={category} type="button">{category}</button>
-        ))}
+        {categories.map((category, index) => <button class:list={['filter-button', { active: index === 0 }]} data-project-filter={category} aria-pressed={index === 0 ? 'true' : 'false'} type="button">{category}</button>)}
       </div>
-      {projects.length ? (
-        <div class="grid" id="project-grid">
-          {projects.map((project) => (
-            <article class="card" data-category={project.data.category}>
-              <div class="card-top">
-                <p class="eyebrow">{project.data.category}</p>
-                <span class:list={['status mono', project.data.status.toLowerCase()]}>{project.data.status}</span>
+      {projects.length ? <div class="grid project-grid" id="project-grid">
+        {projects.map((project) => (
+          <article class="card project-card reveal" data-category={project.data.category}>
+            <a class="card-link" href={`/projects/${project.data.slug ?? project.id}/`} aria-label={`View ${project.data.title} project`}>
+              <div class="project-media">{project.data.coverImage ? <img src={project.data.coverImage} alt={project.data.coverAlt ?? `${project.data.title} project`} loading="lazy" /> : <div class="media-fallback" aria-hidden="true">RENDER IN PROGRESS</div>}</div>
+              <div class="project-copy"><div class="card-top"><p class="eyebrow">{project.data.featured ? `Featured / ${project.data.category}` : project.data.category}</p><span class:list={['status', project.data.status.toLowerCase().replace(' ', '-')] }>{project.data.status}</span></div>
+                <h3>{project.data.title} <span aria-hidden="true">↗</span></h3><p>{project.data.description}</p>
+                <div class="tags">{project.data.technologies.map((technology) => <span class="tag">{technology}</span>)}</div>
+                <div class="article-meta" style="margin-top:16px"><time datetime={project.data.date.toISOString()}>{project.data.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', timeZone: 'UTC' })}</time></div>
               </div>
-              <h3><a href={`/projects/${project.data.slug ?? project.id}/`}>{project.data.title}</a></h3>
-              <p>{project.data.description}</p>
-              <div class="tags">{project.data.technologies.map((technology) => <span class="tag">{technology}</span>)}</div>
-            </article>
-          ))}
-        </div>
-      ) : <div class="empty">No projects have been published.</div>}
+            </a>
+          </article>
+        ))}
+      </div> : <div class="empty">No projects have been published.</div>}
     </section>
   </main>
   <Footer />
@@ -47,14 +41,10 @@ const categories = ['All', ...Array.from(new Set(projects.map((project) => proje
 <script>
   const filterButtons = document.querySelectorAll<HTMLButtonElement>('[data-project-filter]');
   const cards = document.querySelectorAll<HTMLElement>('[data-category]');
-  filterButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      filterButtons.forEach((item) => item.classList.remove('active'));
-      button.classList.add('active');
-      const category = button.dataset.projectFilter;
-      cards.forEach((card) => {
-        card.hidden = category !== 'All' && card.dataset.category !== category;
-      });
-    });
-  });
+  filterButtons.forEach((button) => button.addEventListener('click', () => {
+    filterButtons.forEach((item) => { item.classList.remove('active'); item.setAttribute('aria-pressed', 'false'); });
+    button.classList.add('active'); button.setAttribute('aria-pressed', 'true');
+    const category = button.dataset.projectFilter;
+    cards.forEach((card) => { card.hidden = category !== 'All' && card.dataset.category !== category; });
+  }));
 </script>

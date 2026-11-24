@@ -9,18 +9,37 @@ const links = [
 ];
 ---
 
-<header class="titleblock">
-  <div class="tb-row">
-    <a class="tb-name" href="/" aria-label="Jainavaneeth Kumarashankar home">
-      Jainavaneeth Kumarashankar
-      <span>MECHANICAL + EMBEDDED SYSTEMS</span>
+<header class="site-header">
+  <div class="nav-shell">
+    <a class="brand" href="/" aria-label="Jainavaneeth Kumarashankar home">
+      <span class="brand-name">Jainavaneeth Kumarashankar</span>
+      <span class="brand-caption">MECHANICAL + EMBEDDED SYSTEMS</span>
     </a>
-    <nav aria-label="Primary navigation">
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
+      <span class="menu-icon" aria-hidden="true"></span><span class="menu-label">Menu</span>
+    </button>
+    <nav id="primary-nav" class="primary-nav" aria-label="Primary navigation">
       {links.map((link) => (
-        <a href={link.href} aria-current={pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href)) ? 'page' : undefined}>
-          {link.label}
-        </a>
+        <a href={link.href} aria-current={pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href)) ? 'page' : undefined}>{link.label}</a>
       ))}
     </nav>
   </div>
 </header>
+
+<script>
+  const header = document.querySelector<HTMLElement>('.site-header');
+  const toggle = document.querySelector<HTMLButtonElement>('.menu-toggle');
+  const nav = document.querySelector<HTMLElement>('#primary-nav');
+  const syncScroll = () => header?.classList.toggle('is-scrolled', window.scrollY > 12);
+  syncScroll();
+  window.addEventListener('scroll', syncScroll, { passive: true });
+  toggle?.addEventListener('click', () => {
+    const open = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', String(!open));
+    nav?.classList.toggle('is-open', !open);
+  });
+  nav?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => {
+    toggle?.setAttribute('aria-expanded', 'false');
+    nav.classList.remove('is-open');
+  }));
+</script>
