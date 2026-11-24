@@ -1,0 +1,79 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { getCollection } from 'astro:content';
+import '../../styles/global.css';
+
+const posts = (await getCollection('blog'))
+  .filter((post) => !post.data.draft)
+  .sort((a, b) => {
+    const aDate = a.data.updatedDate?.valueOf() ?? a.data.date.valueOf();
+    const bDate = b.data.updatedDate?.valueOf() ?? b.data.date.valueOf();
+    return bDate - aDate;
+  });
+const categories = ['All', ...Array.from(new Set(posts.map((post) => post.data.category)))];
+---
+
+<BaseLayout title="Engineering Blog — Jainavaneeth Kumarashankar" description="Technical notes on robotics, mechanical engineering, embedded systems, electronics, and software.">
+  <Header />
+  <main id="main-content" class="wrap">
+    <section class="hero">
+      <div class="eyebrow">// engineering notes</div>
+      <h1>Technical blog</h1>
+      <p>Build notes, engineering decisions, experiments, and project documentation.</p>
+    </section>
+    <section>
+      <div class="sec-head"><h2>All articles</h2><span class="sheet-no">{posts.length.toString().padStart(2, '0')} ENTRIES</span></div>
+      <input class="search" id="post-search" type="search" placeholder="Search articles" aria-label="Search articles" />
+      <div class="filters" aria-label="Filter articles by category">
+        {categories.map((category, index) => (
+          <button class:list={['filter-button', { active: index === 0 }]} data-blog-filter={category} type="button">{category}</button>
+        ))}
+      </div>
+      {posts.length ? (
+        <div class="grid" id="blog-grid">
+          {posts.map((post) => (
+            <article class="card" data-category={post.data.category} data-search={`${post.data.title} ${post.data.description} ${post.data.tags.join(' ')}`.toLowerCase()}>
+              <p class="eyebrow">{post.data.category}</p>
+              <h3><a href={`/blog/${post.data.slug ?? post.id}/`}>{post.data.title}</a></h3>
+              <p>{post.data.description}</p>
+              <div class="article-meta">
+                <time datetime={post.data.date.toISOString()}>{post.data.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</time>
+                {post.data.readingTime && <span>{post.data.readingTime} min read</span>}
+              </div>
+              <div class="tags">{post.data.tags.map((tag) => <span class="tag">{tag}</span>)}</div>
+            </article>
+          ))}
+        </div>
+      ) : <div class="empty">No published articles yet.</div>}
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>
+
+<script>
+  const filterButtons = document.querySelectorAll<HTMLButtonElement>('[data-blog-filter]');
+  const cards = document.querySelectorAll<HTMLElement>('[data-category][data-search]');
+  const search = document.querySelector<HTMLInputElement>('#post-search');
+  let activeCategory = 'All';
+
+  function updatePosts() {
+    const query = search?.value.trim().toLowerCase() ?? '';
+    cards.forEach((card) => {
+      const categoryMatch = activeCategory === 'All' || card.dataset.category === activeCategory;
+      const searchMatch = !query || card.dataset.search?.includes(query);
+      card.hidden = !(categoryMatch && searchMatch);
+    });
+  }
+
+  filterButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      filterButtons.forEach((item) => item.classList.remove('active'));
+      button.classList.add('active');
+      activeCategory = button.dataset.blogFilter ?? 'All';
+      updatePosts();
+    });
+  });
+  search?.addEventListener('input', updatePosts);
+</script>

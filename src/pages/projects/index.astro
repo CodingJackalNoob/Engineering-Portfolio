@@ -1,0 +1,60 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { getCollection } from 'astro:content';
+import '../../styles/global.css';
+
+const projects = (await getCollection('projects')).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const categories = ['All', ...Array.from(new Set(projects.map((project) => project.data.category)))];
+---
+
+<BaseLayout title="Projects — Jainavaneeth Kumarashankar" description="Engineering projects across robotics, mechanical design, embedded systems, PCB design, software, and research.">
+  <Header />
+  <main id="main-content" class="wrap">
+    <section class="hero">
+      <div class="eyebrow">// project index</div>
+      <h1>Engineering projects</h1>
+      <p>Mechanical builds, robotics, embedded systems, electronics, and software documented from concept to implementation.</p>
+    </section>
+    <section>
+      <div class="sec-head"><h2>All projects</h2><span class="sheet-no">{projects.length.toString().padStart(2, '0')} ENTRIES</span></div>
+      <div class="filters" aria-label="Filter projects by category">
+        {categories.map((category, index) => (
+          <button class:list={['filter-button', { active: index === 0 }]} data-project-filter={category} type="button">{category}</button>
+        ))}
+      </div>
+      {projects.length ? (
+        <div class="grid" id="project-grid">
+          {projects.map((project) => (
+            <article class="card" data-category={project.data.category}>
+              <div class="card-top">
+                <p class="eyebrow">{project.data.category}</p>
+                <span class:list={['status mono', project.data.status.toLowerCase()]}>{project.data.status}</span>
+              </div>
+              <h3><a href={`/projects/${project.data.slug ?? project.id}/`}>{project.data.title}</a></h3>
+              <p>{project.data.description}</p>
+              <div class="tags">{project.data.technologies.map((technology) => <span class="tag">{technology}</span>)}</div>
+            </article>
+          ))}
+        </div>
+      ) : <div class="empty">No projects have been published.</div>}
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>
+
+<script>
+  const filterButtons = document.querySelectorAll<HTMLButtonElement>('[data-project-filter]');
+  const cards = document.querySelectorAll<HTMLElement>('[data-category]');
+  filterButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      filterButtons.forEach((item) => item.classList.remove('active'));
+      button.classList.add('active');
+      const category = button.dataset.projectFilter;
+      cards.forEach((card) => {
+        card.hidden = category !== 'All' && card.dataset.category !== category;
+      });
+    });
+  });
+</script>

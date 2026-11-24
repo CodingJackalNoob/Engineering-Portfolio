@@ -1,0 +1,69 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { getCollection } from 'astro:content';
+import '../styles/global.css';
+
+const projects = (await getCollection('projects')).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const featured = projects.filter((project) => project.data.featured);
+const posts = (await getCollection('blog')).filter((post) => !post.data.draft).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+---
+
+<BaseLayout title="Jainavaneeth Kumarashankar — Engineering Portfolio" description="Mechanical engineering, robotics, embedded systems, electronics, and software portfolio.">
+  <Header />
+  <main id="main-content" class="wrap">
+    <section class="hero">
+      <div class="eyebrow">// engineering portfolio & build log</div>
+      <h1>I design, build, and document hardware that moves.</h1>
+      <p>I am Jainavaneeth Kumarashankar, an engineer focused on robotics, mechanical design, embedded systems, electronics, and software.</p>
+      <div class="button-row">
+        <a class="button primary" href="/projects/">Explore projects</a>
+        <a class="button" href="/blog/">Read the blog</a>
+        <a class="button" href="/contact/">Contact</a>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-head"><h2>Featured projects</h2><a class="sheet-no" href="/projects/">VIEW ALL / PROJECTS</a></div>
+      {featured.length ? (
+        <div class="grid">
+          {featured.map((project) => (
+            <article class="card">
+              <div class="card-top">
+                <p class="eyebrow">{project.data.category}</p>
+                <span class:list={['status mono', project.data.status.toLowerCase()]}>{project.data.status}</span>
+              </div>
+              <h3><a href={`/projects/${project.data.slug ?? project.id}/`}>{project.data.title}</a></h3>
+              <p>{project.data.description}</p>
+              <div class="tags">{project.data.technologies.map((technology) => <span class="tag">{technology}</span>)}</div>
+            </article>
+          ))}
+        </div>
+      ) : <div class="empty">No featured projects yet.</div>}
+    </section>
+
+    <section>
+      <div class="sec-head"><h2>Recent articles</h2><a class="sheet-no" href="/blog/">VIEW ALL / BLOG</a></div>
+      {posts.length ? (
+        <div class="grid">{posts.slice(0, 4).map((post) => (
+          <article class="card">
+            <p class="eyebrow">{post.data.category}</p>
+            <h3><a href={`/blog/${post.data.slug ?? post.id}/`}>{post.data.title}</a></h3>
+            <p>{post.data.description}</p>
+          </article>
+        ))}</div>
+      ) : <div class="empty">No published articles yet.</div>}
+    </section>
+
+    <section>
+      <div class="sec-head"><h2>Technical interests</h2><span class="sheet-no">ENGINEERING FOCUS</span></div>
+      <div class="tags">
+        <span class="tag">Robotics</span><span class="tag">Mechanical Design</span>
+        <span class="tag">Embedded Systems</span><span class="tag">PCB Design</span>
+        <span class="tag">Electronics</span><span class="tag">Software</span>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>

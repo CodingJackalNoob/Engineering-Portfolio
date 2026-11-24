@@ -1,0 +1,65 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { getCollection, render } from 'astro:content';
+import '../../styles/global.css';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map((project) => ({
+    params: { slug: project.data.slug ?? project.id },
+    props: { project },
+  }));
+}
+
+const { project } = Astro.props;
+const { Content } = await render(project);
+---
+
+<BaseLayout title={`${project.data.title} — Jainavaneeth Kumarashankar`} description={project.data.description} image={project.data.coverImage}>
+  <Header />
+  <main id="main-content" class="wrap">
+    <article>
+      <header class="detail-hero">
+        <div class="eyebrow">// {project.data.category}</div>
+        <h1>{project.data.title}</h1>
+        <p>{project.data.description}</p>
+        <div class="article-meta">
+          <span class:list={['status mono', project.data.status.toLowerCase()]}>{project.data.status}</span>
+          {project.data.technologies.map((technology) => <span class="tag">{technology}</span>)}
+        </div>
+        {project.data.coverImage ? (
+          <div class="cover"><img src={project.data.coverImage} alt={project.data.coverAlt ?? `${project.data.title} project cover`} /></div>
+        ) : (
+          <div class="cover" role="img" aria-label={`No cover image available for ${project.data.title}`}>NO COVER IMAGE / PROJECT RENDER PENDING</div>
+        )}
+      </header>
+      <div class="article"><Content /></div>
+    </article>
+
+    {project.data.images.length > 0 && (
+      <section>
+        <div class="sec-head"><h2>Gallery</h2><span class="sheet-no">PROJECT MEDIA</span></div>
+        <div class="grid">
+          {project.data.images.map((image) => (
+            <figure class="card"><img src={image.src} alt={image.alt} style="width:100%;height:auto" />{image.caption && <figcaption>{image.caption}</figcaption>}</figure>
+          ))}
+        </div>
+      </section>
+    )}
+
+    {(project.data.links.github || project.data.links.documentation || project.data.links.video || project.data.links.external) && (
+      <section>
+        <div class="sec-head"><h2>Resources</h2><span class="sheet-no">EXTERNAL LINKS</span></div>
+        <div class="button-row">
+          {project.data.links.github && <a class="button" href={project.data.links.github} target="_blank" rel="noopener noreferrer">GitHub</a>}
+          {project.data.links.documentation && <a class="button" href={project.data.links.documentation} target="_blank" rel="noopener noreferrer">Documentation</a>}
+          {project.data.links.video && <a class="button" href={project.data.links.video} target="_blank" rel="noopener noreferrer">Video</a>}
+          {project.data.links.external && <a class="button" href={project.data.links.external} target="_blank" rel="noopener noreferrer">External resource</a>}
+        </div>
+      </section>
+    )}
+  </main>
+  <Footer />
+</BaseLayout>

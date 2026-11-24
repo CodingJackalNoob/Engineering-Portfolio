@@ -1,0 +1,22 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/global.css';
+---
+
+<BaseLayout title="Contact — Jainavaneeth Kumarashankar" description="Contact Jainavaneeth Kumarashankar about engineering projects and collaborations.">
+  <Header />
+  <main id="main-content" class="wrap">
+    <section class="hero">
+      <div class="eyebrow">// contact</div>
+      <h1>Let’s talk engineering.</h1>
+      <p>Open to collaborations, technical questions, and conversations about a build.</p>
+      <div class="button-row">
+        <a class="button primary" href="mailto:jainavaneeth@gmail.com">jainavaneeth@gmail.com</a>
+        <a class="button" href="https://github.com/CodingJackalNoob" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>

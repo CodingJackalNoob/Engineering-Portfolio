@@ -1,0 +1,19 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/global.css';
+---
+
+<BaseLayout title="404 — Page Not Found" description="The requested engineering portfolio page could not be found.">
+  <Header />
+  <main id="main-content" class="wrap">
+    <section class="hero">
+      <div class="eyebrow">// 404 / route missing</div>
+      <h1>This sheet was not found.</h1>
+      <p>The requested page does not exist or may have moved.</p>
+      <div class="button-row"><a class="button primary" href="/projects/">View projects</a><a class="button" href="/">Return home</a></div>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>
