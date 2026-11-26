@@ -4,19 +4,26 @@ import path from 'node:path';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { getGeneratedAbout } from '../lib/cms/generated-settings';
+import ResponsiveMediaImage from '../components/ResponsiveMediaImage.astro';
+import { getGeneratedAbout, getGeneratedMediaAssignments } from '../lib/cms/generated-settings';
+import { getMediaFieldAssignments } from '../lib/cms/media';
 import { getPublicProjects } from '../lib/cms/public-content';
 import '../styles/global.css';
 
 export const prerender = true;
 
 const about = await getGeneratedAbout();
+const mediaAssignments = await getGeneratedMediaAssignments();
+const heroAssignment = getMediaFieldAssignments(mediaAssignments, 'page', 'home', 'hero')[0]
+  ?? getMediaFieldAssignments(mediaAssignments, 'page', 'about', 'profile')[0];
 const localPortraitPath = path.join(process.cwd(), 'public', 'images', 'about', 'jai-portrait.jpg');
 const portraitSrc = about?.profilePhoto || (existsSync(localPortraitPath) ? '/images/about/jai-portrait.jpg' : undefined);
 const portraitAlt = about?.profilePhotoAlt || 'Portrait of Jai';
 const projects = (await getPublicProjects()).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 const inProgressProjects = projects.filter((project) => project.data.status === 'In Progress');
 const projectCards = (inProgressProjects.length ? inProgressProjects : projects.filter((project) => project.data.featured)).slice(0, 3);
+const moments = getMediaFieldAssignments(mediaAssignments, 'page', 'home', 'moments')
+  .filter((moment) => moment.displaySettings.visible !== false);
 
 // Add an image under public/images/about and set src to its public URL when one is ready.
 const photoSlots = [
@@ -50,7 +57,9 @@ const photoSlots = [
         </nav>
       </div>
       <figure class="home-hero-visual">
-        {portraitSrc
+        {heroAssignment
+          ? <ResponsiveMediaImage assignment={heroAssignment} loading="eager" fetchpriority="high" sizes="(max-width: 680px) 78vw, 440px" />
+          : portraitSrc
           ? <img src={portraitSrc} alt={portraitAlt} fetchpriority="high" />
           : <div class="home-portrait-placeholder" role="img" aria-label="Portrait placeholder. Add jai-portrait.jpg to public/images/about."><span>JK</span></div>}
         <figcaption class="home-portrait-caption">
@@ -64,26 +73,35 @@ const photoSlots = [
       <div class="photo-strip-heading">
         <div>
           <span class="eyebrow">// LITTLE MOMENTS, BIG BUILDS</span>
-          <p>Your photos go here. Add images to <code>public/images/about/</code>.</p>
+          <p>{moments.length ? `${moments.length} moments from the workbench` : 'Moments from the workbench.'}</p>
         </div>
         <button class="photo-motion-toggle" type="button" aria-pressed="false" aria-controls="photo-track" data-photo-motion-toggle>Pause photos</button>
       </div>
       <div class="photo-marquee">
         <div class="photo-track" id="photo-track">
-          {[false, true].map((duplicate) => (
+          {moments.length ? [false, true].map((duplicate) => (
+            <div class="photo-group" aria-hidden={duplicate ? 'true' : undefined}>
+              {moments.map((moment, index) => {
+                const title = typeof moment.displaySettings.title === 'string' ? moment.displaySettings.title : `Moment ${index + 1}`;
+                const date = typeof moment.displaySettings.date === 'string' ? moment.displaySettings.date : '';
+                return (
+                <figure class="photo-card reveal">
+                  <ResponsiveMediaImage assignment={moment} loading="lazy" sizes="190px" />
+                  <figcaption><strong>{title}</strong>{date && <time>{date}</time>}{moment.caption && <span>{moment.caption}</span>}</figcaption>
+                </figure>
+                );
+              })}
+            </div>
+          )) : [false, true].map((duplicate) => (
             <div class="photo-group" aria-hidden={duplicate ? 'true' : undefined}>
               {photoSlots.map((photo, index) => (
                 <figure class="photo-card reveal">
-                  {photo.src ? (
-                    <img src={photo.src} alt={photo.alt} loading="lazy" />
-                  ) : (
-                    <div class="photo-placeholder" role="img" aria-label={`Photo placeholder: ${photo.title}`}>
-                      <span class="placeholder-index">SNAPSHOT / {String(index + 1).padStart(2, '0')}</span>
-                      <span class="placeholder-cross" aria-hidden="true">+</span>
-                      <span class="placeholder-add">ADD YOUR PHOTO</span>
-                      <span class="placeholder-file">{photo.filename}</span>
-                    </div>
-                  )}
+                  <div class="photo-placeholder" role="img" aria-label={`Photo placeholder: ${photo.title}`}>
+                    <span class="placeholder-index">SNAPSHOT / {String(index + 1).padStart(2, '0')}</span>
+                    <span class="placeholder-cross" aria-hidden="true">+</span>
+                    <span class="placeholder-add">ADD YOUR PHOTO</span>
+                    <span class="placeholder-file">{photo.filename}</span>
+                  </div>
                   <figcaption><strong>{photo.title}</strong></figcaption>
                 </figure>
               ))}
@@ -103,16 +121,21 @@ const photoSlots = [
       {projectCards.length ? (
         <div class="home-project-grid">
           {projectCards.map((project) => {
-            const projectImage = project.data.coverImage ?? project.data.images[0]?.src;
-            const projectImageAlt = project.data.coverImage
+            const projectCover = project.data.cmsId
+              ? getMediaFieldAssignments(mediaAssignments, 'project', project.data.cmsId, 'cover')[0]
+              : undefined;
+            const projectImage = projectCover?.media.url ?? project.data.coverImage ?? project.data.images[0]?.src;
+            const projectImageAlt = projectCover?.alt || (project.data.coverImage
               ? project.data.coverAlt ?? `${project.data.title} project`
-              : project.data.images[0]?.alt ?? `${project.data.title} project`;
+              : project.data.images[0]?.alt ?? `${project.data.title} project`);
             return (
               <article class="card project-card home-project-card reveal" data-tilt-card>
                 <a class="card-link" href={`/projects/${project.data.slug ?? project.id}/`} aria-label={`View ${project.data.title} project`}>
                   <div class="project-media">
                     {projectImage
-                      ? <img src={projectImage} alt={projectImageAlt} loading="lazy" />
+                      ? projectCover
+                        ? <ResponsiveMediaImage assignment={projectCover} alt={projectImageAlt} loading="lazy" sizes="(max-width: 680px) 100vw, (max-width: 900px) 85vw, 50vw" />
+                        : <img src={projectImage} alt={projectImageAlt} loading="lazy" />
                       : <div class="media-fallback project-image-placeholder" aria-hidden="true">PROJECT PHOTO SLOT</div>}
                   </div>
                   <div class="project-copy">

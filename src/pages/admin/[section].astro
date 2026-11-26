@@ -1,5 +1,7 @@
 ---
 import AdminLayout from '../../layouts/AdminLayout.astro';
+import MediaLibrary from '../../components/MediaLibrary.astro';
+import MediaFieldEditor from '../../components/MediaFieldEditor.astro';
 import { getAdminSession } from '../../lib/admin/auth';
 
 export const prerender = false;
@@ -10,7 +12,7 @@ if (!session.ok) return Astro.redirect('/admin/login/');
 const sections = {
   projects: { title: 'Projects', label: 'PROJECT ARCHIVE', message: 'Create and maintain engineering project records.' },
   articles: { title: 'Blog / Articles', label: 'ENGINEERING JOURNAL', message: 'Write and publish technical notes and build documentation.' },
-  media: { title: 'Media Library', label: 'ASSET WORKSPACE', message: 'Protected uploads and media organization will be connected to Supabase Storage in a later CMS stage.' },
+  media: { title: 'Media Library', label: 'ASSET WORKSPACE', message: 'Manage image assets and assign them to portfolio content.' },
   about: { title: 'About Page', label: 'PERSONAL PROFILE', message: 'About-page editing will be connected to the Supabase content store in a later CMS stage.' },
   settings: { title: 'Site Settings', label: 'PORTFOLIO CONFIGURATION', message: 'Site settings will be editable after the content schema is in place.' },
 } as const;
@@ -55,9 +57,11 @@ const editorType = Astro.params.section === 'projects'
                   <label>Start date<input name="startDate" type="date" /></label>
                   <label>Completion date<input name="completionDate" type="date" /></label>
                   <label class="field-full">Overview<textarea name="overview" rows="3"></textarea></label>
-                  <label>Cover image URL<input name="coverImage" type="url" placeholder="https://…" /></label>
+                  <label>Legacy cover image URL<input name="coverImage" type="url" placeholder="Existing URL fallback" /><small>Kept for older content; new images can use the Media Library field.</small></label>
                   <label>Cover image alt text<input name="coverAlt" maxlength="240" /></label>
-                  <label class="field-full">Additional image URLs<textarea name="images" rows="3" placeholder="One public image URL per line"></textarea><small>Use public image URLs for now; private media uploads are a later stage.</small></label>
+                  <div class="field-full"><MediaFieldEditor label="Project cover" ownerType="project" ownerIdSource="content" fieldKey="cover" help="Assign a library image. The old URL remains a fallback for legacy records." /></div>
+                  <label class="field-full">Legacy gallery image URLs<textarea name="images" rows="3" placeholder="One public image URL per line"></textarea><small>Existing URLs continue to render. Use the ordered library gallery below for new media.</small></label>
+                  <div class="field-full"><MediaFieldEditor label="Project gallery" ownerType="project" ownerIdSource="content" fieldKey="gallery" multiple help="Choose, caption, reposition, remove, and reorder multiple images." /></div>
                   <label>GitHub URL<input name="github" type="url" /></label>
                   <label>Documentation URL<input name="documentation" type="url" /></label>
                   <label>Video URL<input name="video" type="url" /></label>
@@ -70,26 +74,6 @@ const editorType = Astro.params.section === 'projects'
                   <label>Challenges and solutions<textarea name="challenges" rows="3"></textarea></label>
                   <label class="field-full">Future improvements<textarea name="futureImprovements" rows="3"></textarea></label>
                   <label class="editor-checkbox"><input name="featured" type="checkbox" /> Feature this project</label>
-                </>
-              ) : Astro.params.section === 'media' ? (
-                <>
-                  <section class="admin-media-tools" aria-labelledby="media-tools-title">
-                    <div class="admin-section-heading"><div><p class="admin-kicker">ASSET WORKSPACE</p><h2 id="media-tools-title">Upload and organize images</h2></div></div>
-                    <form id="media-upload-form" class="media-upload-form">
-                      <label>Images<input name="files" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple required /></label>
-                      <label>Alt text<input name="alt" maxlength="500" placeholder="Describe the image for accessibility" /></label>
-                      <label>Caption<input name="caption" maxlength="1000" /></label>
-                      <label>Collection<input name="folder" maxlength="80" placeholder="robotics, workbench…" /></label>
-                      <button class="admin-primary-button" type="submit">Upload images <span aria-hidden="true">↑</span></button>
-                    </form>
-                    <p class="media-upload-note">Images are resized and converted to WebP. New uploads stay private until you publish them. Maximum 12 MB per source image.</p>
-                  </section>
-                  <div class="media-toolbar">
-                    <label>Search media<input id="media-search" type="search" placeholder="Filename, alt text, folder" /></label>
-                    <label>Collection<select id="media-folder-filter"><option value="all">All collections</option></select></label>
-                  </div>
-                  <div class="editor-notice" id="media-message" role="status" aria-live="polite" hidden></div>
-                  <section id="media-library" class="media-library" aria-live="polite"><p class="admin-loading">Loading media…</p></section>
                 </>
               ) : Astro.params.section === 'about' ? (
                 <>
@@ -138,8 +122,9 @@ const editorType = Astro.params.section === 'projects'
                   <label>Tags<input name="tags" placeholder="robotics, controls, build log" /><small>Separate tags with commas.</small></label>
                   <label>Article date<input name="date" type="date" required /></label>
                   <label>Estimated reading time<input name="readingTime" type="number" min="1" max="240" /></label>
-                  <label>Cover image URL<input name="coverImage" type="url" placeholder="https://…" /></label>
+                  <label>Legacy cover image URL<input name="coverImage" type="url" placeholder="Existing URL fallback" /></label>
                   <label>Cover image alt text<input name="coverAlt" maxlength="240" /></label>
+                  <div class="field-full"><MediaFieldEditor label="Article cover" ownerType="article" ownerIdSource="content" fieldKey="cover" help="Assign a Media Library asset while keeping old image URLs as fallbacks." /></div>
                   <label>SEO title<input name="seoTitle" maxlength="160" /></label>
                   <label>SEO description<textarea name="seoDescription" rows="2" maxlength="320"></textarea></label>
                   <label class="field-full">Video embed URL<input name="videoEmbed" type="url" placeholder="https://www.youtube-nocookie.com/embed/…" /><small>YouTube or Vimeo embed URL.</small></label>
@@ -160,6 +145,7 @@ const editorType = Astro.params.section === 'projects'
                 <section class="markdown-preview-panel" aria-label="Rendered content preview"><p class="admin-kicker">PREVIEW</p><div id="markdown-preview" class="markdown-preview"><p class="preview-empty">Your formatted content preview appears here.</p></div></section>
               </div>
             </div>
+            {editorType === 'article' && <div class="field-full"><MediaFieldEditor label="Inline article images" ownerType="article" ownerIdSource="content" fieldKey="inline" multiple insertMarkdown help="Save ordered media assignments, then insert a selected image into the article body. Published articles require public images." /></div>}
             <div class="editor-actions">
               <p id="editor-message" class="editor-message" role="status" aria-live="polite"></p>
               <button class="admin-quiet-button" type="button" data-save-state="draft">Save draft</button>
@@ -169,6 +155,29 @@ const editorType = Astro.params.section === 'projects'
           </form>
         </section>
       </>
+    ) : Astro.params.section === 'media' ? (
+      <>
+        <MediaLibrary />
+        <section class="media-slot-workspace" aria-labelledby="page-media-slots-title">
+          <div class="admin-section-heading"><div><p class="admin-kicker">PAGE ASSIGNMENTS</p><h2 id="page-media-slots-title">Homepage and About images</h2></div><p class="admin-subtitle">Assign published library assets to stable page fields. New fields can use the same component and assignment API.</p></div>
+          <div class="media-slot-grid">
+            <MediaFieldEditor label="Homepage hero / profile image" ownerType="page" ownerId="home" fieldKey="hero" help="Single responsive image with alt text and focal point." />
+            <MediaFieldEditor label="Little Moments carousel" ownerType="page" ownerId="home" fieldKey="moments" multiple metadata="moment" help="Ordered carousel images with title, optional date, caption, visibility, alt text, and focal point." />
+            <MediaFieldEditor label="About profile image" ownerType="page" ownerId="about" fieldKey="profile" help="This assignment takes precedence over the older profile URL when present." />
+            <MediaFieldEditor label="About secondary image" ownerType="page" ownerId="about" fieldKey="secondary" help="Optional secondary image for future About page compositions." />
+            <MediaFieldEditor label="About image gallery" ownerType="page" ownerId="about" fieldKey="gallery" multiple help="Ordered gallery images with per-image captions and focal points." />
+          </div>
+        </section>
+      </>
+    ) : Astro.params.section === 'about' ? (
+      <section class="media-slot-workspace" aria-labelledby="about-media-title">
+        <div class="admin-section-heading"><div><p class="admin-kicker">ABOUT PAGE / MEDIA</p><h2 id="about-media-title">Profile and gallery images</h2></div></div>
+        <div class="media-slot-grid">
+          <MediaFieldEditor label="About profile image" ownerType="page" ownerId="about" fieldKey="profile" />
+          <MediaFieldEditor label="About secondary image" ownerType="page" ownerId="about" fieldKey="secondary" />
+          <MediaFieldEditor label="About image gallery" ownerType="page" ownerId="about" fieldKey="gallery" multiple />
+        </div>
+      </section>
     ) : (
       <div class="admin-module-state">
         <span class="admin-module-state-mark" aria-hidden="true">◌</span>
@@ -239,6 +248,7 @@ const editorType = Astro.params.section === 'projects'
     set('date', new Date().toISOString().slice(0, 10));
     set('state', 'draft');
     showMessage(message, '');
+    document.dispatchEvent(new Event('admin-content-reset'));
     if (panel) panel.hidden = false;
     document.querySelector('#editor-heading')!.textContent = `New ${form?.dataset.contentType}`;
     void renderPreview();
@@ -341,6 +351,7 @@ const editorType = Astro.params.section === 'projects'
     document.querySelector('#editor-heading')!.textContent = `Edit ${String(item.data.title ?? item.slug)}`;
     panel.hidden = false;
     showMessage(message, '');
+    document.dispatchEvent(new Event('admin-content-opened'));
     void renderPreview();
     panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -423,6 +434,7 @@ const editorType = Astro.params.section === 'projects'
       if (!response.ok) throw new Error(result.warning ?? result.error ?? 'Could not save this record.');
       showMessage(message, result.warning ?? 'Saved successfully.');
       if (result.item) set('id', result.item.id);
+      document.dispatchEvent(new Event('admin-content-saved'));
       await loadRecords();
     } catch (error) {
       showMessage(message, error instanceof Error ? error.message : 'Could not save this record.', true);
@@ -477,228 +489,6 @@ const editorType = Astro.params.section === 'projects'
     void renderPreview();
   });
   void loadRecords();
-</script>}
-
-{Astro.params.section === 'media' && <script>
-  type MediaItem = {
-    id: string;
-    bucket: string;
-    storage_path: string;
-    original_name: string;
-    size_bytes: number;
-    alt: string;
-    caption: string;
-    folder: string;
-    url: string | null;
-  };
-
-  const mediaLibrary = document.querySelector<HTMLElement>('#media-library');
-  const mediaMessage = document.querySelector<HTMLElement>('#media-message');
-  const mediaSearch = document.querySelector<HTMLInputElement>('#media-search');
-  const folderFilter = document.querySelector<HTMLSelectElement>('#media-folder-filter');
-  const uploadForm = document.querySelector<HTMLFormElement>('#media-upload-form');
-  let searchTimer: number | undefined;
-
-  function showMediaMessage(text: string, isError = false) {
-    if (!mediaMessage) return;
-    mediaMessage.textContent = text;
-    mediaMessage.hidden = !text;
-    mediaMessage.classList.toggle('is-error', isError);
-  }
-
-  async function loadMedia() {
-    if (!mediaLibrary) return;
-    mediaLibrary.replaceChildren();
-    const loading = document.createElement('p');
-    loading.className = 'admin-loading';
-    loading.textContent = 'Loading media…';
-    mediaLibrary.append(loading);
-    try {
-      const params = new URLSearchParams({
-        q: mediaSearch?.value.trim() ?? '',
-        folder: folderFilter?.value ?? 'all',
-      });
-      const response = await fetch(`/api/admin/media/?${params}`);
-      const result = await response.json() as { items?: MediaItem[]; folders?: string[]; error?: string };
-      if (!response.ok) throw new Error(result.error ?? 'Could not load media.');
-      renderMedia(result.items ?? []);
-      updateFolders(result.folders ?? []);
-    } catch (error) {
-      mediaLibrary.textContent = error instanceof Error ? error.message : 'Could not load media.';
-      mediaLibrary.classList.add('is-error');
-    }
-  }
-
-  function updateFolders(folders: string[]) {
-    if (!folderFilter) return;
-    const current = folderFilter.value;
-    folderFilter.replaceChildren(new Option('All collections', 'all'));
-    for (const folder of folders) folderFilter.add(new Option(folder, folder));
-    folderFilter.value = folders.includes(current) ? current : 'all';
-  }
-
-  function renderMedia(items: MediaItem[]) {
-    if (!mediaLibrary) return;
-    mediaLibrary.replaceChildren();
-    if (!items.length) {
-      const empty = document.createElement('p');
-      empty.className = 'admin-empty-records';
-      empty.textContent = 'No images match this view. Upload a real project or workspace photo to get started.';
-      mediaLibrary.append(empty);
-      return;
-    }
-    for (const item of items) {
-      const card = document.createElement('article');
-      card.className = 'media-card';
-      const image = document.createElement('img');
-      image.src = item.url ?? '';
-      image.alt = item.alt;
-      image.loading = 'lazy';
-      image.className = 'media-card-image';
-      const details = document.createElement('div');
-      details.className = 'media-card-details';
-      const name = document.createElement('strong');
-      name.textContent = item.original_name;
-      const info = document.createElement('small');
-      info.textContent = `${item.folder} · ${(item.size_bytes / 1024).toFixed(0)} KB · ${item.bucket === 'portfolio-media' ? 'public' : 'private'}`;
-      details.append(name, info);
-
-      const altLabel = document.createElement('label');
-      altLabel.textContent = 'Alt text';
-      const alt = document.createElement('input');
-      alt.value = item.alt;
-      alt.maxLength = 500;
-      altLabel.append(alt);
-      const captionLabel = document.createElement('label');
-      captionLabel.textContent = 'Caption';
-      const caption = document.createElement('input');
-      caption.value = item.caption;
-      caption.maxLength = 1000;
-      captionLabel.append(caption);
-      const folderLabel = document.createElement('label');
-      folderLabel.textContent = 'Collection';
-      const folder = document.createElement('input');
-      folder.value = item.folder;
-      folder.maxLength = 80;
-      folderLabel.append(folder);
-
-      const actions = document.createElement('div');
-      actions.className = 'media-card-actions';
-      const save = document.createElement('button');
-      save.type = 'button';
-      save.className = 'admin-quiet-button';
-      save.textContent = 'Save details';
-      save.addEventListener('click', () => void updateMedia(item.id, { alt: alt.value, caption: caption.value, folder: folder.value }));
-      const copy = document.createElement('button');
-      copy.type = 'button';
-      copy.className = 'admin-quiet-button';
-      copy.textContent = 'Copy URL';
-      copy.disabled = !item.url;
-      copy.addEventListener('click', async () => {
-        if (!item.url) return;
-        try {
-          await navigator.clipboard.writeText(item.url);
-          showMediaMessage('Image URL copied.');
-        } catch {
-          showMediaMessage('Clipboard access is unavailable in this browser.', true);
-        }
-      });
-      if (item.bucket !== 'portfolio-media') {
-        const publish = document.createElement('button');
-        publish.type = 'button';
-        publish.className = 'admin-primary-button';
-        publish.textContent = 'Publish image';
-        publish.addEventListener('click', () => void publishMedia(item.id));
-        actions.append(publish);
-      }
-      const remove = document.createElement('button');
-      remove.type = 'button';
-      remove.className = 'admin-quiet-button danger';
-      remove.textContent = 'Delete';
-      remove.addEventListener('click', () => void deleteMedia(item));
-      actions.append(save, copy, remove);
-      card.append(image, details, altLabel, captionLabel, folderLabel, actions);
-      mediaLibrary.append(card);
-    }
-  }
-
-  async function sendMediaAction(method: string, payload: Record<string, unknown>) {
-    const response = await fetch('/api/admin/media/', {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    const result = response.status === 204 ? {} : await response.json() as { error?: string; warning?: string };
-    if (!response.ok) throw new Error(result.warning ?? result.error ?? 'Media action failed.');
-    return result;
-  }
-
-  async function updateMedia(id: string, fields: { alt: string; caption: string; folder: string }) {
-    try {
-      await sendMediaAction('PATCH', { id, action: 'update', ...fields });
-      showMediaMessage('Media details saved.');
-      await loadMedia();
-    } catch (error) {
-      showMediaMessage(error instanceof Error ? error.message : 'Could not save media details.', true);
-    }
-  }
-
-  async function publishMedia(id: string) {
-    try {
-      await sendMediaAction('PATCH', { id, action: 'publish' });
-      showMediaMessage('Image published and now has a public URL.');
-      await loadMedia();
-    } catch (error) {
-      showMediaMessage(error instanceof Error ? error.message : 'Could not publish the image.', true);
-    }
-  }
-
-  async function deleteMedia(item: MediaItem) {
-    if (!window.confirm(`Delete "${item.original_name}"? In-use images cannot be deleted.`)) return;
-    try {
-      const response = await fetch(`/api/admin/media/?id=${encodeURIComponent(item.id)}`, { method: 'DELETE' });
-      const result = response.status === 204 ? {} : await response.json() as { error?: string; warning?: string };
-      if (!response.ok) throw new Error(result.warning ?? result.error ?? 'Could not delete the image.');
-      showMediaMessage('Image deleted.');
-      await loadMedia();
-    } catch (error) {
-      showMediaMessage(error instanceof Error ? error.message : 'Could not delete the image.', true);
-    }
-  }
-
-  uploadForm?.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const fileInput = uploadForm.querySelector<HTMLInputElement>('input[name="files"]');
-    const files = Array.from(fileInput?.files ?? []);
-    if (!files.length) return;
-    showMediaMessage(`Uploading ${files.length} image${files.length === 1 ? '' : 's'}…`);
-    const values = new FormData(uploadForm);
-    try {
-      for (const file of files) {
-        const payload = new FormData();
-        payload.set('file', file);
-        payload.set('alt', String(values.get('alt') ?? ''));
-        payload.set('caption', String(values.get('caption') ?? ''));
-        payload.set('folder', String(values.get('folder') ?? ''));
-        const response = await fetch('/api/admin/media/', { method: 'POST', body: payload });
-        const result = await response.json() as { error?: string };
-        if (!response.ok) throw new Error(result.error ?? `Could not upload ${file.name}.`);
-      }
-      uploadForm.reset();
-      showMediaMessage(`Uploaded ${files.length} image${files.length === 1 ? '' : 's'}.`);
-      await loadMedia();
-    } catch (error) {
-      showMediaMessage(error instanceof Error ? error.message : 'Image upload failed.', true);
-      await loadMedia();
-    }
-  });
-
-  mediaSearch?.addEventListener('input', () => {
-    window.clearTimeout(searchTimer);
-    searchTimer = window.setTimeout(() => void loadMedia(), 180);
-  });
-  folderFilter?.addEventListener('change', () => void loadMedia());
-  void loadMedia();
 </script>}
 
 {['about', 'settings'].includes(Astro.params.section ?? '') && <script>

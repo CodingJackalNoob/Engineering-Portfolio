@@ -3,8 +3,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ImageLightbox from '../../components/ImageLightbox.astro';
+import ResponsiveMediaImage from '../../components/ResponsiveMediaImage.astro';
 import { render } from 'astro:content';
 import { getPublicProjects } from '../../lib/cms/public-content';
+import { getGeneratedMediaAssignments } from '../../lib/cms/generated-settings';
+import { getMediaFieldAssignments, type PublicMediaAssignment } from '../../lib/cms/media';
 import '../../styles/global.css';
 
 export const prerender = true;
@@ -18,6 +21,10 @@ const { project } = Astro.props;
 const { Content, headings } = await render(project);
 const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
 const formattedDate = project.data.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+const mediaAssignments = await getGeneratedMediaAssignments();
+const projectCover = project.data.cmsId ? getMediaFieldAssignments(mediaAssignments, 'project', project.data.cmsId, 'cover')[0] : undefined;
+const assignedGallery = project.data.cmsId ? getMediaFieldAssignments(mediaAssignments, 'project', project.data.cmsId, 'gallery') : [];
+const projectGallery = assignedGallery.length ? assignedGallery : project.data.images.map((image) => ({ mediaId: image.src, alt: image.alt, caption: image.caption, media: { url: image.src } }));
 ---
 
 <BaseLayout title={`${project.data.title} — Jainavaneeth Kumarashankar`} description={project.data.description} image={project.data.coverImage}>
@@ -31,7 +38,7 @@ const formattedDate = project.data.date.toLocaleDateString('en-US', { year: 'num
         <div class="article-meta"><span class:list={['status', project.data.status.toLowerCase().replace(' ', '-')] }>{project.data.status}</span><time datetime={project.data.date.toISOString()}>{formattedDate}</time>{project.data.updatedDate && <span>Updated {project.data.updatedDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' })}</span>}</div>
         <div class="tags">{project.data.technologies.map((technology) => <span class="tag">{technology}</span>)}</div>
         <div class="cover">
-          {project.data.coverImage ? <button class="cover-image-button" type="button" data-gallery-open data-image-src={project.data.coverImage} data-image-alt={project.data.coverAlt ?? `${project.data.title} project cover`} aria-label={`Expand ${project.data.title} cover image`}><img src={project.data.coverImage} alt={project.data.coverAlt ?? `${project.data.title} project cover`} fetchpriority="high" /></button> : <div class="media-fallback" aria-hidden="true">PROJECT RENDER / DOCUMENTATION IN PROGRESS</div>}
+          {projectCover ? <button class="cover-image-button" type="button" data-gallery-open data-image-src={projectCover.media.url} data-image-alt={projectCover.alt || `${project.data.title} project cover`} aria-label={`Expand ${project.data.title} cover image`}><ResponsiveMediaImage assignment={projectCover} alt={projectCover.alt || `${project.data.title} project cover`} loading="eager" fetchpriority="high" sizes="(max-width: 760px) 100vw, 1180px" /></button> : project.data.coverImage ? <button class="cover-image-button" type="button" data-gallery-open data-image-src={project.data.coverImage} data-image-alt={project.data.coverAlt ?? `${project.data.title} project cover`} aria-label={`Expand ${project.data.title} cover image`}><img src={project.data.coverImage} alt={project.data.coverAlt ?? `${project.data.title} project cover`} fetchpriority="high" /></button> : <div class="media-fallback" aria-hidden="true">PROJECT RENDER / DOCUMENTATION IN PROGRESS</div>}
         </div>
       </header>
       <div class="detail-layout">
@@ -58,7 +65,9 @@ const formattedDate = project.data.date.toLocaleDateString('en-US', { year: 'num
         </aside>
       </div>
     </article>
-    {project.data.images.length > 0 && <section class="detail-gallery"><div class="sec-head"><h2>Build documentation</h2><span class="sheet-no">PROJECT MEDIA</span></div><div class="grid">{project.data.images.map((image, index) => <figure class="card gallery-card" style="padding:12px"><button class="gallery-image-button" type="button" data-gallery-open data-image-src={image.src} data-image-alt={image.alt} data-image-caption={image.caption ?? ''} aria-label={`Expand project image ${index + 1}: ${image.alt}`}><img src={image.src} alt={image.alt} loading="lazy" /><span class="gallery-expand-hint" aria-hidden="true">VIEW IMAGE ↗</span></button>{image.caption && <figcaption>{image.caption}</figcaption>}</figure>)}</div></section>}
+    {projectGallery.length > 0 && <section class="detail-gallery"><div class="sec-head"><h2>Build documentation</h2><span class="sheet-no">PROJECT MEDIA</span></div><div class="grid">{projectGallery.map((image, index) => <figure class="card gallery-card" style="padding:12px"><button class="gallery-image-button" type="button" data-gallery-open data-image-src={image.media.url} data-image-alt={image.alt ?? ''} data-image-caption={image.caption ?? ''} aria-label={`Expand project image ${index + 1}: ${image.alt || project.data.title}`}>
+      {'ownerType' in image ? <ResponsiveMediaImage assignment={image as PublicMediaAssignment} loading="lazy" sizes="(max-width: 760px) 100vw, 560px" /> : <img src={image.media.url} alt={image.alt ?? ''} loading="lazy" />}
+      <span class="gallery-expand-hint" aria-hidden="true">VIEW IMAGE ↗</span></button>{image.caption && <figcaption>{image.caption}</figcaption>}</figure>)}</div></section>}
   </main>
   <ImageLightbox title={`${project.data.title} image gallery`} />
   <Footer />

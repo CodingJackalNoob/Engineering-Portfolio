@@ -70,4 +70,14 @@ Edit an existing `.mdx` file in `content/projects/` or `content/blog/`. Change `
 - Keep image files under `public/images/projects/` or `public/images/blog/`.
 - Required frontmatter is validated during `npm run build`.
 - Invalid metadata stops the build instead of silently displaying broken content.
-- There is no public admin interface or database.
+- The site has an owner-only admin interface backed by Supabase.
+
+## Admin Media Library
+
+The owner-only `/admin/media` page stores uploaded images in Supabase Storage. The server validates and decodes each upload, creates WebP responsive variants, and keeps the original out of the public bucket. A public image must be explicitly published before a published page can use it. The browser talks only to same-origin admin API routes; the Supabase service role key stays on the server.
+
+Set `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` in the server environment. Apply the media schema migrations in order, including `20261127010000_extend_cms_media_assignments.sql`, before opening the library. Do not edit migrations that have already been applied; add a new migration for later schema changes. The service role key must never use a `PUBLIC_` prefix.
+
+The reusable `MediaFieldEditor` component binds an ordered set of media to an owner and field key. For example, a future page section can assign its assets with `<MediaFieldEditor label="Diagram" ownerType="widget" ownerId="motor-demo" fieldKey="diagram" />`. On a public page, load assignments with `getGeneratedMediaAssignments()`, select that owner/field using `getMediaFieldAssignments(...)`, then render each item with `ResponsiveMediaImage`. Keep owner IDs stable so deployments resolve the same assignments. The homepage moments field demonstrates per-image title, date, and visibility metadata; article body images use `cms-media:<media-id>` markers and are resolved during CMS sync.
+
+Legacy project and article image URLs remain as a fallback while those records are migrated to assignments. The `/admin/about` editor exposes profile and gallery assignments; the homepage hero and moments assignments are available in `/admin/media`.

@@ -94,6 +94,30 @@ async function saveContent(
   const slug = typeof data.slug === 'string' ? data.slug : '';
   if (!isValidSlug(slug)) return json({ error: 'Use a lowercase, hyphen-separated URL slug.' }, 400);
 
+  if (input.data.state === 'published' && input.data.id) {
+    const { data: assignments, error: assignmentError } = await owner.client.from('cms_media_assignments')
+      .select('media_id')
+      .eq('owner_type', input.data.type)
+      .eq('owner_id', input.data.id);
+    if (assignmentError) {
+      console.error('CMS media publication check failed:', assignmentError.message);
+      return json({ error: 'Could not verify the media assigned to this content. Verify that the media assignment migration is applied.' }, 503);
+    }
+    const mediaIds = [...new Set((assignments ?? []).map((assignment) => assignment.media_id))];
+    if (mediaIds.length) {
+      const { data: assignedMedia, error: mediaError } = await owner.client.from('cms_media')
+        .select('id,bucket')
+        .in('id', mediaIds);
+      if (mediaError) {
+        console.error('CMS assigned-media lookup failed:', mediaError.message);
+        return json({ error: 'Could not verify the assigned media records.' }, 503);
+      }
+      if ((assignedMedia ?? []).length !== mediaIds.length || assignedMedia?.some((media) => media.bucket !== 'portfolio-media')) {
+        return json({ error: 'Publish assigned images from the Media Library before publishing this content.' }, 409);
+      }
+    }
+  }
+
   const deployHook = import.meta.env.VERCEL_DEPLOY_HOOK_URL;
   if (input.data.state === 'published' && !deployHook) {
     return json({ error: 'Publishing is unavailable until a Vercel deploy hook is configured.' }, 503);

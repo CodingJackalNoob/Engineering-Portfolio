@@ -2,11 +2,18 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import ResponsiveMediaImage from '../components/ResponsiveMediaImage.astro';
 import { getGeneratedAbout } from '../lib/cms/generated-settings';
+import { getGeneratedMediaAssignments } from '../lib/cms/generated-settings';
+import { getMediaFieldAssignments } from '../lib/cms/media';
 import '../styles/global.css';
 
 export const prerender = true;
 const about = await getGeneratedAbout();
+const mediaAssignments = await getGeneratedMediaAssignments();
+const aboutProfile = getMediaFieldAssignments(mediaAssignments, 'page', 'about', 'profile')[0];
+const aboutSecondary = getMediaFieldAssignments(mediaAssignments, 'page', 'about', 'secondary')[0];
+const aboutGallery = getMediaFieldAssignments(mediaAssignments, 'page', 'about', 'gallery');
 ---
 
 <BaseLayout title="About — Jainavaneeth Kumarashankar" description={about?.biography || "About Jainavaneeth Kumarashankar and his work in mechanical and embedded systems engineering."}>
@@ -16,8 +23,9 @@ const about = await getGeneratedAbout();
       <>
         <section class="about-cms-hero">
           <div><div class="eyebrow">// about / field notes</div><h1>A little more about the person at the workbench.</h1><p>{about.biography}</p></div>
-          {about.profilePhoto && <figure class="about-profile-figure" data-tilt-card><img src={about.profilePhoto} alt={about.profilePhotoAlt} fetchpriority="high" /></figure>}
+          {(aboutProfile || about.profilePhoto) && <figure class="about-profile-figure" data-tilt-card>{aboutProfile ? <ResponsiveMediaImage assignment={aboutProfile} alt={aboutProfile.alt || about.profilePhotoAlt} fetchpriority="high" sizes="(max-width: 760px) 100vw, 440px" /> : <img src={about.profilePhoto} alt={about.profilePhotoAlt} fetchpriority="high" />}</figure>}
         </section>
+        {(aboutSecondary || aboutGallery.length > 0) && <section class="about-cms-section"><div class="sec-head"><h2>From the workbench</h2><span class="sheet-no">FIELD IMAGES</span></div><div class="about-media-gallery">{aboutSecondary && <figure class="about-secondary-image"><ResponsiveMediaImage assignment={aboutSecondary} loading="lazy" sizes="(max-width: 760px) 100vw, 560px" />{aboutSecondary.caption && <figcaption>{aboutSecondary.caption}</figcaption>}</figure>}{aboutGallery.map((image) => <figure><ResponsiveMediaImage assignment={image} loading="lazy" sizes="(max-width: 760px) 100vw, 560px" />{image.caption && <figcaption>{image.caption}</figcaption>}</figure>)}</div></section>}
         {about.aspiration && <section class="about-cms-section"><div class="sec-head"><h2>What keeps me curious</h2><span class="sheet-no">MOTIVATION</span></div><p>{about.aspiration}</p></section>}
         {about.skills.length > 0 && <section class="about-cms-section"><div class="sec-head"><h2>Skills and interests</h2><span class="sheet-no">IN PRACTICE</span></div><div class="tags">{about.skills.map((skill) => <span class="tag">{skill}</span>)}</div></section>}
         {about.education.length > 0 && <section class="about-cms-section"><div class="sec-head"><h2>Education</h2><span class="sheet-no">LEARNING</span></div><div class="grid">{about.education.map((item) => <article class="card about-record" data-tilt-card><p class="eyebrow">{item.years}</p><h3>{item.institution}</h3><p>{item.program}</p>{item.detail && <p>{item.detail}</p>}</article>)}</div></section>}

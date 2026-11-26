@@ -41,7 +41,7 @@ const navigation = [
           {navigation.map((item) => (
             <a class:list={['admin-nav-link', { active: item.id === activeSection }]} href={item.href} aria-current={item.id === activeSection ? 'page' : undefined}>
               <span class="admin-nav-dot" aria-hidden="true"></span>{item.label}
-              {['media', 'about', 'settings'].includes(item.id) && <span class="admin-nav-soon">SOON</span>}
+              {['about', 'settings'].includes(item.id) && <span class="admin-nav-soon">SOON</span>}
             </a>
           ))}
         </nav>
@@ -61,5 +61,8 @@ const navigation = [
         <slot />
       </main>
     </div>
+    <script>
+      import '../scripts/admin-media';
+    </script>
   </body>
 </html>

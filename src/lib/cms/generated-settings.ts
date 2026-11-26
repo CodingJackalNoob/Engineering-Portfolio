@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { publicMediaAssignmentsSchema } from './media';
 import { aboutSettingsSchema, siteSettingsSchema } from './settings-schemas';
 
 async function readGeneratedFile(fileName: string) {
@@ -24,5 +25,13 @@ export async function getGeneratedSiteSettings() {
   if (!contents) return null;
   const result = siteSettingsSchema.safeParse(JSON.parse(contents));
   if (!result.success) throw new Error('Generated site settings do not match the CMS schema.');
+  return result.data;
+}
+
+export async function getGeneratedMediaAssignments() {
+  const contents = await readGeneratedFile('media.json');
+  if (!contents) return [];
+  const result = publicMediaAssignmentsSchema.safeParse(JSON.parse(contents));
+  if (!result.success) throw new Error('Generated media assignments do not match the CMS schema.');
   return result.data;
 }

@@ -1,0 +1,31 @@
+<section class="admin-media-workspace" aria-label="Media library">
+  <section class="admin-media-tools" aria-labelledby="media-tools-title">
+    <div class="admin-section-heading"><div><p class="admin-kicker">ASSET WORKSPACE</p><h2 id="media-tools-title">Upload and organize images</h2></div></div>
+    <form id="media-upload-form" class="media-upload-form">
+      <label class="media-dropzone" data-media-dropzone>
+        <span class="media-drop-icon" aria-hidden="true">＋</span>
+        <strong data-drop-label>Drop images here or browse</strong>
+        <small>JPG, PNG, WebP, or AVIF · up to 12 MB each</small>
+        <input name="files" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple required />
+      </label>
+      <label>Alt text<input name="alt" maxlength="500" placeholder="Describe the image for accessibility" /></label>
+      <label>Caption<input name="caption" maxlength="1000" /></label>
+      <label>Collection<input name="folder" maxlength="80" placeholder="robotics, workbench…" /></label>
+      <button class="admin-primary-button" type="submit">Upload images <span aria-hidden="true">↑</span></button>
+    </form>
+    <p class="media-upload-note">Uploads are validated and converted to responsive WebP variants. New uploads stay private until you publish them.</p>
+  </section>
+
+  <div class="media-toolbar media-toolbar-extended">
+    <label>Search<input id="media-search" type="search" placeholder="Filename, alt text, caption" /></label>
+    <label>Collection<select id="media-folder-filter"><option value="all">All collections</option></select></label>
+    <label>File type<select id="media-type-filter"><option value="all">All formats</option><option value="image/webp">WebP</option></select></label>
+    <label>Usage<select id="media-usage-filter"><option value="all">All assets</option><option value="used">In use</option><option value="unused">Unused</option><option value="project">Projects</option><option value="article">Articles</option><option value="page">Pages</option></select></label>
+    <div class="media-view-toggle" role="group" aria-label="Media layout">
+      <button type="button" data-media-view="grid" aria-pressed="true">Grid</button>
+      <button type="button" data-media-view="list" aria-pressed="false">List</button>
+    </div>
+  </div>
+  <div class="editor-notice" id="media-message" role="status" aria-live="polite" hidden></div>
+  <section id="media-library" class="media-library" aria-live="polite"><p class="admin-loading">Loading media…</p></section>
+</section>

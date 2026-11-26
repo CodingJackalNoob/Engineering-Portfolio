@@ -47,6 +47,7 @@ const projects = defineCollection({
     futureImprovements: z.string().optional(),
     videoEmbed: z.url().optional(),
     cmsManaged: z.boolean().optional(),
+    cmsId: z.uuid().optional(),
   }),
 });
 
@@ -70,6 +71,7 @@ const blog = defineCollection({
     seoDescription: z.string().optional(),
     videoEmbed: z.url().optional(),
     cmsManaged: z.boolean().optional(),
+    cmsId: z.uuid().optional(),
   }),
 });
 

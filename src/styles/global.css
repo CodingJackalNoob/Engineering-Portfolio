@@ -216,6 +216,7 @@ section{
   }
   ::view-transition-old(root),::view-transition-new(root){animation-duration:.01ms!important}
 }
+.about-media-gallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.about-media-gallery figure{min-width:0;margin:0;padding:10px;border:1px solid var(--line);border-radius:var(--radius-md);background:linear-gradient(145deg,rgba(16,29,45,.96),rgba(10,20,33,.92));box-shadow:0 16px 38px rgba(2,8,18,.16)}.about-media-gallery figure img{display:block;width:100%;height:auto;max-height:520px;object-fit:cover;border-radius:var(--radius-sm)}.about-media-gallery figcaption{margin-top:8px;color:var(--dim);font:.7rem var(--mono)}.about-media-gallery .about-secondary-image{grid-column:1/-1}.about-media-gallery .about-secondary-image img{max-height:640px}@media(max-width:760px){.about-media-gallery{grid-template-columns:1fr}}
 
 /* Homepage editorial layout */
 .home-page{width:min(1360px,calc(100% - 64px))}

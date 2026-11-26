@@ -1,0 +1,29 @@
+---
+import type { PublicMediaAssignment } from '../lib/cms/media';
+
+interface Props {
+  assignment: PublicMediaAssignment;
+  alt?: string;
+  class?: string;
+  loading?: 'eager' | 'lazy';
+  sizes?: string;
+  fetchpriority?: 'high' | 'low' | 'auto';
+}
+
+const { assignment, alt, class: className, loading = 'lazy', sizes = '100vw', fetchpriority } = Astro.props;
+const { media } = assignment;
+const focalPoint = `${assignment.focalX * 100}% ${assignment.focalY * 100}%`;
+---
+
+<img
+  src={media.url}
+  srcset={media.srcSet || undefined}
+  sizes={media.srcSet ? sizes : undefined}
+  width={media.width ?? undefined}
+  height={media.height ?? undefined}
+  alt={alt ?? assignment.alt}
+  class={className}
+  loading={loading}
+  fetchpriority={fetchpriority}
+  style={`object-position: ${focalPoint}`}
+/>

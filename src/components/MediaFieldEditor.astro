@@ -1,0 +1,54 @@
+---
+interface Props {
+  label: string;
+  ownerType: string;
+  ownerId?: string;
+  ownerIdSource?: 'content';
+  fieldKey: string;
+  multiple?: boolean;
+  metadata?: 'moment';
+  insertMarkdown?: boolean;
+  help?: string;
+}
+
+const {
+  label,
+  ownerType,
+  ownerId = '',
+  ownerIdSource,
+  fieldKey,
+  multiple = false,
+  metadata,
+  insertMarkdown = false,
+  help,
+} = Astro.props;
+const controlId = `media-field-${ownerType}-${fieldKey}`.replace(/[^a-z0-9-]/gi, '-');
+---
+
+<section
+  class="media-field-editor"
+  data-media-field
+  data-owner-type={ownerType}
+  data-owner-id={ownerId}
+  data-owner-id-source={ownerIdSource}
+  data-field-key={fieldKey}
+  data-multiple={String(multiple)}
+  data-metadata={metadata ?? ''}
+  data-insert-markdown={String(insertMarkdown)}
+  aria-labelledby={`${controlId}-label`}
+>
+  <div class="media-field-heading">
+    <div><p class="admin-kicker">MEDIA FIELD / {fieldKey}</p><h3 id={`${controlId}-label`}>{label}</h3></div>
+    <div class="media-field-actions"><button class="admin-quiet-button" type="button" data-media-field-open>Select image{multiple ? 's' : ''}</button><button class="admin-quiet-button" type="button" data-media-field-save>Save assignment</button></div>
+  </div>
+  {help && <p class="media-field-help">{help}</p>}
+  <div class="media-assignment-items" data-media-field-items><p class="media-assignment-empty">No image selected yet.</p></div>
+  <p class="media-field-status" data-media-field-status role="status" aria-live="polite"></p>
+
+  <dialog class="media-picker-dialog" data-media-picker-dialog aria-labelledby={`${controlId}-picker-title`}>
+    <div class="media-picker-header"><div><p class="admin-kicker">MEDIA LIBRARY</p><h2 id={`${controlId}-picker-title`}>Choose an image</h2></div><button class="admin-quiet-button" type="button" data-media-picker-close aria-label="Close media picker">Close</button></div>
+    <label class="media-picker-search">Search published and private images<input type="search" data-media-picker-search placeholder="Name, caption, collection…" /></label>
+    <p class="media-picker-help">Private images can be assigned to drafts. Publish an image before using it on a public page.</p>
+    <div class="media-picker-results" data-media-picker-results><p class="admin-loading">Choose an image to begin.</p></div>
+  </dialog>
+</section>
