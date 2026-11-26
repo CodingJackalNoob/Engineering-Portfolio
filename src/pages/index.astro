@@ -4,9 +4,11 @@ import path from 'node:path';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import ProjectGlobe from '../components/ProjectGlobe.astro';
 import ResponsiveMediaImage from '../components/ResponsiveMediaImage.astro';
 import { getGeneratedAbout, getGeneratedMediaAssignments } from '../lib/cms/generated-settings';
 import { getMediaFieldAssignments } from '../lib/cms/media';
+import { toGlobeProject } from '../lib/globe/project-config';
 import { getPublicProjects } from '../lib/cms/public-content';
 import '../styles/global.css';
 
@@ -22,6 +24,23 @@ const portraitAlt = about?.profilePhotoAlt || 'Portrait of Jai';
 const projects = (await getPublicProjects()).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 const inProgressProjects = projects.filter((project) => project.data.status === 'In Progress');
 const projectCards = (inProgressProjects.length ? inProgressProjects : projects.filter((project) => project.data.featured)).slice(0, 3);
+const globeProjects = projects.map((project) => {
+  const slug = project.data.slug ?? project.id;
+  const assignedCover = project.data.cmsId
+    ? getMediaFieldAssignments(mediaAssignments, 'project', project.data.cmsId, 'cover')[0]
+    : undefined;
+  const image = assignedCover?.media.url ?? project.data.coverImage ?? project.data.images[0]?.src;
+  return toGlobeProject({
+    id: project.data.cmsId ?? project.id,
+    slug,
+    title: project.data.title,
+    category: project.data.category,
+    description: project.data.description,
+    technologies: project.data.technologies,
+    image,
+    imageAlt: assignedCover?.alt || project.data.coverAlt || project.data.images[0]?.alt || `${project.data.title} project image`,
+  });
+});
 const moments = getMediaFieldAssignments(mediaAssignments, 'page', 'home', 'moments')
   .filter((moment) => moment.displaySettings.visible !== false);
 
@@ -38,11 +57,27 @@ const photoSlots = [
 <BaseLayout title="Jainavaneeth Kumarashankar — Engineering Portfolio" description="A personal engineering portfolio by Jainavaneeth Kumarashankar, exploring robotics, mechanical design, embedded systems, electronics, and software.">
   <Header />
   <main id="main-content" class="wrap home-page">
-    <section class="home-hero">
-      <div class="home-hero-copy">
+    <section class="home-hero atlas-home-hero">
+      <header class="atlas-hero-heading">
         <div class="eyebrow">// curious by design · learning by building</div>
         <p class="home-name">Jainavaneeth Kumarashankar <span>ASPIRING ENGINEER</span></p>
-        <h1>How does it work?<br /><em>Let’s find out.</em></h1>
+      </header>
+      <div class="atlas-hero-stage">
+        <figure class="home-hero-visual atlas-portrait">
+        {heroAssignment
+          ? <ResponsiveMediaImage assignment={heroAssignment} loading="eager" fetchpriority="high" sizes="(max-width: 680px) 78vw, 440px" />
+          : portraitSrc
+          ? <img src={portraitSrc} alt={portraitAlt} fetchpriority="high" />
+          : <div class="home-portrait-placeholder" role="img" aria-label="Portrait placeholder. Add jai-portrait.jpg to public/images/about."><span>JK</span></div>}
+        <figcaption class="home-portrait-caption">
+          <span class="eyebrow">MECHANICAL + EMBEDDED SYSTEMS</span>
+          <strong>Jai<span aria-hidden="true">.</span></strong>
+        </figcaption>
+        </figure>
+        <ProjectGlobe projects={globeProjects} />
+      </div>
+      <div class="atlas-hero-copy">
+        <h1>How does it work? <em>Let’s find out.</em></h1>
         <p class="home-intro">I’m drawn to the moment an idea starts taking shape: a mechanism on the bench, a circuit on the board, a few lines of code making something move. I’m an aspiring engineer exploring robotics, mechanical design, embedded systems, electronics, and software—one experiment at a time.</p>
         <nav class="home-actions" aria-label="Explore the portfolio">
           <a class="button primary" data-magnetic href="/projects/">Explore projects <span aria-hidden="true">↗</span></a>
@@ -56,17 +91,6 @@ const photoSlots = [
           <a href="mailto:jainavaneeth@gmail.com">Email <span aria-hidden="true">↗</span></a>
         </nav>
       </div>
-      <figure class="home-hero-visual">
-        {heroAssignment
-          ? <ResponsiveMediaImage assignment={heroAssignment} loading="eager" fetchpriority="high" sizes="(max-width: 680px) 78vw, 440px" />
-          : portraitSrc
-          ? <img src={portraitSrc} alt={portraitAlt} fetchpriority="high" />
-          : <div class="home-portrait-placeholder" role="img" aria-label="Portrait placeholder. Add jai-portrait.jpg to public/images/about."><span>JK</span></div>}
-        <figcaption class="home-portrait-caption">
-          <span class="eyebrow">HELLO THERE</span>
-          <strong>I’m Jai<span aria-hidden="true">.</span></strong>
-        </figcaption>
-      </figure>
       <div class="hero-bottom-note"><span>AN OPEN NOTEBOOK, NOT A FINISHED BLUEPRINT</span><span aria-hidden="true">SCROLL TO EXPLORE ↓</span></div>
     </section>
     <div class="home-photo-strip" aria-label="Personal photo collection">

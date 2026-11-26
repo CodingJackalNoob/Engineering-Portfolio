@@ -31,6 +31,8 @@ npm run preview
 6. Write the project content below the frontmatter using Markdown/MDX.
 7. Commit and push the file. Vercel will automatically generate `/projects/<slug>/`.
 
+The homepage globe reads project titles, descriptions, categories, technologies, images, and links from these project records. Confirmed map coordinates are kept separately in `src/lib/globe/project-config.ts`, keyed by project slug as `{ latitude, longitude }`. Add coordinates only when the project has a real location to show; projects without one remain available in the globe's project preview list without a map pin.
+
 Project categories are:
 
 - `Robotics`

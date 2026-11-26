@@ -1,0 +1,66 @@
+---
+interface GlobeProject {
+  id: string;
+  slug: string;
+  title: string;
+  category: string;
+  description: string;
+  technologies: string[];
+  image: string;
+  imageAlt: string;
+  categories: string[];
+  location: { latitude: number; longitude: number } | null;
+  href: string;
+}
+
+interface Props {
+  projects: GlobeProject[];
+}
+
+const { projects } = Astro.props;
+const categories = [
+  { id: 'all', label: 'ALL SYSTEMS' },
+  { id: 'mechanism', label: 'MECHANISM' },
+  { id: 'signal', label: 'SIGNAL' },
+  { id: 'system', label: 'SYSTEM' },
+];
+---
+
+<section class="project-globe" data-project-globe data-projects={JSON.stringify(projects)} aria-label="Interactive project globe">
+  <header class="globe-heading">
+    <div><span class="eyebrow">FIELD STUDY / 001</span><p>IDEAS IN MOTION</p></div>
+    <span class="globe-status"><i aria-hidden="true"></i> SYSTEMS / IN PROGRESS</span>
+  </header>
+  <div class="globe-stage">
+    <canvas class="globe-canvas" data-globe-canvas aria-hidden="true"></canvas>
+    <div class="globe-pin-layer" data-globe-pin-layer aria-label="Project locations"></div>
+    <div class="globe-center-label" aria-hidden="true"><strong>MAKE <i>·</i> UNDERSTAND</strong><span>BUILD / TEST / LEARN</span></div>
+    <div class="globe-coordinate-readout" data-globe-readout aria-live="polite">DRAG TO EXPLORE</div>
+    <article class="globe-postcard" data-globe-postcard hidden aria-live="polite">
+      <button class="globe-postcard-close" type="button" data-globe-close aria-label="Close project preview">×</button>
+      <div class="globe-postcard-image" data-globe-card-image hidden></div>
+      <div class="globe-postcard-copy">
+        <span class="globe-card-kicker" data-globe-card-category></span>
+        <h3 data-globe-card-title></h3>
+        <p data-globe-card-description></p>
+        <div class="globe-card-tags" data-globe-card-tags></div>
+        <a class="globe-card-link" data-globe-card-link>Open project <span aria-hidden="true">↗</span></a>
+      </div>
+    </article>
+  </div>
+  <footer class="globe-controls">
+    <nav class="globe-filters" aria-label="Filter project categories">
+      {categories.map((category, index) => <button type="button" data-globe-filter={category.id} aria-pressed={index === 0 ? 'true' : 'false'}>{category.label}</button>)}
+    </nav>
+    <p class="globe-location-note" data-globe-note>
+      {projects.some((project) => project.location)
+        ? 'Select a red pin to open its project field note.'
+        : 'No project coordinates are configured yet. Add confirmed latitude and longitude in src/lib/globe/project-config.ts.'}
+    </p>
+  </footer>
+  <nav class="globe-project-index" data-globe-project-index aria-label="Projects on the globe"></nav>
+</section>
+
+<script>
+  import '../scripts/project-globe';
+</script>
