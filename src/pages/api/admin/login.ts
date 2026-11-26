@@ -19,22 +19,43 @@ const json = (body: { error: string }, status: number, headers?: Record<string, 
 
 const ADMIN_LOGIN_RATE_LIMIT_WINDOW_SECONDS = 60;
 
-function isRateLimitDecision(value: unknown): value is { allowed: boolean; retry_after_seconds: number } {
-  if (!Array.isArray(value) || value.length !== 1) return false;
-  const decision: unknown = value[0];
-  return (
-    typeof decision === 'object' &&
-    decision !== null &&
-    'allowed' in decision &&
-    typeof decision.allowed === 'boolean' &&
-    'retry_after_seconds' in decision &&
-    typeof decision.retry_after_seconds === 'number' &&
-    Number.isSafeInteger(decision.retry_after_seconds) &&
-    (decision.allowed
-      ? decision.retry_after_seconds === 0
-      : decision.retry_after_seconds >= 1 &&
-        decision.retry_after_seconds <= ADMIN_LOGIN_RATE_LIMIT_WINDOW_SECONDS)
-  );
+type RateLimitDecision = { allowed: boolean; retry_after_seconds: number };
+
+function parseRateLimitDecision(value: unknown): RateLimitDecision | null {
+  if (!Array.isArray(value) || value.length !== 1) return null;
+  const row: unknown = value[0];
+  if (typeof row !== 'object' || row === null || !('allowed' in row) || !('retry_after_seconds' in row)) {
+    return null;
+  }
+
+  const allowed = row.allowed;
+  const retryAfterSeconds = row.retry_after_seconds;
+  if (
+    typeof allowed !== 'boolean' ||
+    typeof retryAfterSeconds !== 'number' ||
+    !Number.isSafeInteger(retryAfterSeconds)
+  ) {
+    return null;
+  }
+  if (
+    (allowed && retryAfterSeconds !== 0) ||
+    (!allowed &&
+      (retryAfterSeconds < 1 || retryAfterSeconds > ADMIN_LOGIN_RATE_LIMIT_WINDOW_SECONDS))
+  ) {
+    return null;
+  }
+
+  return { allowed, retry_after_seconds: retryAfterSeconds };
+}
+
+function getSafeErrorMetadata(error: unknown) {
+  const metadata: { name?: string; code?: string; status?: number } = {};
+  if (error instanceof Error) metadata.name = error.name;
+  if (typeof error === 'object' && error !== null) {
+    if ('code' in error && typeof error.code === 'string') metadata.code = error.code;
+    if ('status' in error && typeof error.status === 'number') metadata.status = error.status;
+  }
+  return metadata;
 }
 
 export const POST: APIRoute = async ({ request, cookies, clientAddress, url }) => {
@@ -75,22 +96,29 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress, url }) =
       p_account_hash: accountHash,
     });
   } catch (error) {
-    console.error('Admin login rate limiter unavailable:', error instanceof Error ? error.message : 'unknown error');
+    console.error('Admin login rate limiter request failed.', getSafeErrorMetadata(error));
     return json({ error: 'Login protection is temporarily unavailable. Please try again later.' }, 503);
   }
   if (rateLimitResponse.error) {
-    console.error('Admin login rate limiter unavailable:', rateLimitResponse.error.message);
+    console.error('Admin login rate limiter returned an error.', {
+      code: rateLimitResponse.error.code,
+      status: rateLimitResponse.status,
+    });
     return json({ error: 'Login protection is temporarily unavailable. Please try again later.' }, 503);
   }
-  if (!isRateLimitDecision(rateLimitResponse.data)) {
-    console.error('Admin login rate limiter returned an invalid response.');
+  const rateLimitDecision = parseRateLimitDecision(rateLimitResponse.data);
+  if (!rateLimitDecision) {
+    console.error('Admin login rate limiter returned an invalid response.', {
+      isArray: Array.isArray(rateLimitResponse.data),
+      rowCount: Array.isArray(rateLimitResponse.data) ? rateLimitResponse.data.length : undefined,
+    });
     return json({ error: 'Login protection is temporarily unavailable. Please try again later.' }, 503);
   }
-  if (!rateLimitResponse.data.allowed) {
+  if (!rateLimitDecision.allowed) {
     return json(
       { error: 'Too many sign-in attempts. Please wait before trying again.' },
       429,
-      { 'Retry-After': rateLimitResponse.data.retry_after_seconds.toString() },
+      { 'Retry-After': String(rateLimitDecision.retry_after_seconds) },
     );
   }
 
