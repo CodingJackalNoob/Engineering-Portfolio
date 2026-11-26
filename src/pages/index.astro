@@ -31,8 +31,8 @@ const photoSlots = [
         <h1>How does it work?<br /><em>Let’s find out.</em></h1>
         <p class="home-intro">I’m drawn to the moment an idea starts taking shape: a mechanism on the bench, a circuit on the board, a few lines of code making something move. I’m an aspiring engineer exploring robotics, mechanical design, embedded systems, electronics, and software—one experiment at a time.</p>
         <nav class="home-actions" aria-label="Explore the portfolio">
-          <a class="button primary" href="/projects/">Explore projects <span aria-hidden="true">↗</span></a>
-          <a class="button" href="/blog/">Engineering journal <span aria-hidden="true">↗</span></a>
+          <a class="button primary" data-magnetic href="/projects/">Explore projects <span aria-hidden="true">↗</span></a>
+          <a class="button" data-magnetic href="/blog/">Engineering journal <span aria-hidden="true">↗</span></a>
           <a class="home-about-link" href="/about/">A little about me <span aria-hidden="true">→</span></a>
         </nav>
       </div>
@@ -96,7 +96,7 @@ const photoSlots = [
               ? project.data.coverAlt ?? `${project.data.title} project`
               : project.data.images[0]?.alt ?? `${project.data.title} project`;
             return (
-              <article class="card project-card home-project-card reveal">
+              <article class="card project-card home-project-card reveal" data-tilt-card>
                 <a class="card-link" href={`/projects/${project.data.slug ?? project.id}/`} aria-label={`View ${project.data.title} project`}>
                   <div class="project-media">
                     {projectImage

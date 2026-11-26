@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
+import ImageLightbox from '../../components/ImageLightbox.astro';
 import { render } from 'astro:content';
 import { getPublicArticles } from '../../lib/cms/public-content';
 import '../../styles/global.css';
@@ -30,7 +31,7 @@ const dateLabel = (date: Date) => date.toLocaleDateString('en-US', { year: 'nume
         <p>{post.data.subtitle ?? post.data.description}</p>
         <div class="article-meta"><time datetime={post.data.date.toISOString()}>{dateLabel(post.data.date)}</time>{post.data.updatedDate && <span>Updated {dateLabel(post.data.updatedDate)}</span>}<span>{readingTime} min read</span></div>
         <div class="tags">{post.data.tags.map((tag) => <span class="tag">{tag}</span>)}</div>
-        {post.data.coverImage && <figure class="cover"><img src={post.data.coverImage} alt={post.data.coverAlt ?? `${post.data.title} cover`} fetchpriority="high" /></figure>}
+        {post.data.coverImage && <figure class="cover"><button class="cover-image-button" type="button" data-gallery-open data-image-src={post.data.coverImage} data-image-alt={post.data.coverAlt ?? `${post.data.title} cover`} aria-label={`Expand ${post.data.title} cover image`}><img src={post.data.coverImage} alt={post.data.coverAlt ?? `${post.data.title} cover`} fetchpriority="high" /></button></figure>}
       </header>
       <div class="article">
         {toc.length > 0 && <nav class="toc" aria-label="Table of contents"><strong class="eyebrow">In this article</strong><ul>{toc.map((heading) => <li><a href={`#${heading.slug}`}>{heading.text}</a></li>)}</ul></nav>}
@@ -39,5 +40,6 @@ const dateLabel = (date: Date) => date.toLocaleDateString('en-US', { year: 'nume
       </div>
     </article>
   </main>
+  <ImageLightbox title={`${post.data.title} image`} />
   <Footer />
 </BaseLayout>

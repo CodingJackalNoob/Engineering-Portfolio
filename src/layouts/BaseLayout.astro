@@ -45,6 +45,8 @@ const canonical = new URL(Astro.url.pathname, siteOrigin);
     <div class="reading-progress" aria-hidden="true"><span></span></div>
     <slot />
     <script>
+      import '../scripts/portfolio-interactions';
+
       const prepareMotion = () => {
         document.documentElement.classList.add('motion-ready');
         const revealItems = document.querySelectorAll<HTMLElement>('.reveal');
@@ -73,8 +75,8 @@ const canonical = new URL(Astro.url.pathname, siteOrigin);
       document.addEventListener('astro:page-load', () => {
         prepareMotion();
         updateReadingProgress();
-        window.addEventListener('scroll', updateReadingProgress, { passive: true });
       });
+      window.addEventListener('scroll', updateReadingProgress, { passive: true });
     </script>
   </body>
 </html>

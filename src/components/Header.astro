@@ -27,26 +27,30 @@ const links = [
 </header>
 
 <script>
-  const header = document.querySelector<HTMLElement>('.site-header');
-  const toggle = document.querySelector<HTMLButtonElement>('.menu-toggle');
-  const nav = document.querySelector<HTMLElement>('#primary-nav');
-  const syncScroll = () => header?.classList.toggle('is-scrolled', window.scrollY > 12);
-  syncScroll();
-  window.addEventListener('scroll', syncScroll, { passive: true });
-  toggle?.addEventListener('click', () => {
-    const open = toggle.getAttribute('aria-expanded') === 'true';
-    toggle.setAttribute('aria-expanded', String(!open));
-    nav?.classList.toggle('is-open', !open);
-  });
-  nav?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => {
-    toggle?.setAttribute('aria-expanded', 'false');
-    nav.classList.remove('is-open');
-  }));
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && toggle?.getAttribute('aria-expanded') === 'true') {
-      toggle.setAttribute('aria-expanded', 'false');
-      nav?.classList.remove('is-open');
-      toggle.focus();
+  const updateHeader = () => document.querySelector('.site-header')?.classList.toggle('is-scrolled', window.scrollY > 12);
+  document.addEventListener('astro:page-load', updateHeader);
+  window.addEventListener('scroll', updateHeader, { passive: true });
+  document.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element)) return;
+    const toggle = event.target.closest<HTMLButtonElement>('.menu-toggle');
+    const nav = document.querySelector<HTMLElement>('#primary-nav');
+    if (toggle) {
+      const open = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', String(!open));
+      nav?.classList.toggle('is-open', !open);
+      return;
     }
+    if (event.target.closest('#primary-nav a')) {
+      document.querySelector<HTMLButtonElement>('.menu-toggle')?.setAttribute('aria-expanded', 'false');
+      nav?.classList.remove('is-open');
+    }
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    const toggle = document.querySelector<HTMLButtonElement>('.menu-toggle');
+    if (toggle?.getAttribute('aria-expanded') !== 'true') return;
+    toggle.setAttribute('aria-expanded', 'false');
+    document.querySelector('#primary-nav')?.classList.remove('is-open');
+    toggle.focus();
   });
 </script>

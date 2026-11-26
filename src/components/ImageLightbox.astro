@@ -1,0 +1,25 @@
+---
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<dialog class="image-lightbox" data-image-lightbox aria-label={title}>
+  <div class="lightbox-frame">
+    <div class="lightbox-toolbar">
+      <p class="lightbox-label">{title}</p>
+      <button class="lightbox-control lightbox-close" type="button" data-lightbox-close aria-label="Close image viewer">Close <span aria-hidden="true">×</span></button>
+    </div>
+    <figure class="lightbox-figure">
+      <img data-lightbox-image alt="" />
+      <figcaption data-lightbox-caption></figcaption>
+    </figure>
+    <div class="lightbox-navigation">
+      <button class="lightbox-control" type="button" data-lightbox-previous aria-label="Previous image">← Previous</button>
+      <span data-lightbox-count aria-live="polite"></span>
+      <button class="lightbox-control" type="button" data-lightbox-next aria-label="Next image">Next →</button>
+    </div>
+  </div>
+</dialog>

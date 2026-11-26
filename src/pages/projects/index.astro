@@ -23,7 +23,7 @@ const categories = ['All', ...categoryList];
       </div>
       {projects.length ? <div class="grid project-grid" id="project-grid">
         {projects.map((project) => (
-          <article class="card project-card reveal" data-category={project.data.category}>
+          <article class="card project-card reveal" data-category={project.data.category} data-tilt-card>
             <a class="card-link" href={`/projects/${project.data.slug ?? project.id}/`} aria-label={`View ${project.data.title} project`}>
               <div class="project-media">{project.data.coverImage ? <img src={project.data.coverImage} alt={project.data.coverAlt ?? `${project.data.title} project`} loading="lazy" /> : <div class="media-fallback" aria-hidden="true">RENDER IN PROGRESS</div>}</div>
               <div class="project-copy"><div class="card-top"><p class="eyebrow">{project.data.featured ? `Featured / ${project.data.category}` : project.data.category}</p><span class:list={['status', project.data.status.toLowerCase().replace(' ', '-')] }>{project.data.status}</span></div>
