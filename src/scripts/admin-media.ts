@@ -44,7 +44,7 @@ function showLibraryMessage(message: string, error = false) {
   status.classList.toggle('is-error', error);
 }
 
-async function readJson<T>(response: Response): Promise<T & { error?: string; warning?: string }> {
+async function readJson<T>(response: Response): Promise<T & { error?: string; warning?: string; diagnostic?: { code?: string; message?: string; details?: string; hint?: string } }> {
   let raw: unknown = {};
   if (response.status !== 204) {
     const contentType = response.headers.get('content-type') ?? '';
@@ -57,9 +57,15 @@ async function readJson<T>(response: Response): Promise<T & { error?: string; wa
       throw new Error(`The media server returned an unexpected response (${response.status}).`);
     }
   }
-  const body = raw as { error?: string; warning?: string } & Partial<T>;
-  if (!response.ok) throw new Error(body.warning ?? body.error ?? 'Media request failed.');
-  return body as T & { error?: string; warning?: string };
+  const body = raw as { error?: string; warning?: string; diagnostic?: { code?: string; message?: string; details?: string; hint?: string } } & Partial<T>;
+  if (!response.ok) {
+    const diagnostic = body.diagnostic;
+    const context = diagnostic
+      ? [diagnostic.code, diagnostic.message, diagnostic.details, diagnostic.hint].filter(Boolean).join(' · ')
+      : '';
+    throw new Error([body.warning ?? body.error ?? 'Media request failed.', context].filter(Boolean).join(' '));
+  }
+  return body as T & { error?: string; warning?: string; diagnostic?: { code?: string; message?: string; details?: string; hint?: string } };
 }
 
 async function prepareUploadFile(file: File) {

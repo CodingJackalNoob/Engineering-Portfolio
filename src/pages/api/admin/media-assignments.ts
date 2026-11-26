@@ -133,8 +133,17 @@ export const PUT: APIRoute = async ({ request, cookies }) => {
     p_items: group.items,
   });
   if (saveError) {
-    console.error('CMS media assignment save failed:', saveError.message);
-    return json({ error: 'Could not save these media assignments. Verify that the media assignment migration is applied.' }, 503);
+    const diagnostic = {
+      code: saveError.code || undefined,
+      message: saveError.message,
+      details: saveError.details || undefined,
+      hint: saveError.hint || undefined,
+    };
+    console.error('CMS media assignment RPC failed:', diagnostic);
+    return json({
+      error: 'Could not save these media assignments.',
+      diagnostic,
+    }, 503);
   }
   await writeCmsActivity(owner.client, {
     actorId: owner.session.user.id,
