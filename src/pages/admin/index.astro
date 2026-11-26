@@ -1,0 +1,89 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getAdminSession } from '../../lib/admin/auth';
+import { createCmsClient } from '../../lib/cms/server';
+
+export const prerender = false;
+
+const session = await getAdminSession(Astro.request, Astro.cookies);
+if (!session.ok) return Astro.redirect('/admin/login/');
+
+const client = createCmsClient();
+let metrics: { projects: number; articles: number; drafts: number; activity: Array<{ action: string; content_type: string | null; content_slug: string | null; created_at: string }> } | null = null;
+let cmsUnavailable = !client;
+if (client) {
+  const [projects, articles, drafts, activity] = await Promise.all([
+    client.from('cms_content').select('id', { count: 'exact', head: true }).eq('content_type', 'project').eq('publication_state', 'published'),
+    client.from('cms_content').select('id', { count: 'exact', head: true }).eq('content_type', 'article').eq('publication_state', 'published'),
+    client.from('cms_content').select('id', { count: 'exact', head: true }).eq('publication_state', 'draft'),
+    client.from('cms_activity').select('action,content_type,content_slug,created_at').order('created_at', { ascending: false }).limit(5),
+  ]);
+  cmsUnavailable = Boolean(projects.error || articles.error || drafts.error || activity.error);
+  if (!cmsUnavailable) {
+    metrics = {
+      projects: projects.count ?? 0,
+      articles: articles.count ?? 0,
+      drafts: drafts.count ?? 0,
+      activity: activity.data ?? [],
+    };
+  } else {
+    console.error('CMS dashboard overview could not load required data.');
+  }
+}
+---
+
+<AdminLayout title="Dashboard" activeSection="dashboard">
+  <section class="admin-content">
+    <div class="admin-page-heading">
+      <div>
+        <p class="admin-kicker">YOUR WORK / AT A GLANCE</p>
+        <h1>Good to have you back.</h1>
+        <p class="admin-subtitle">A private workspace for the things you are building and documenting.</p>
+      </div>
+      <div class="admin-date"><span class="admin-live-dot"></span> PRIVATE SESSION</div>
+    </div>
+
+    <section class="admin-setup-card">
+      <div class="admin-setup-icon" aria-hidden="true">✳</div>
+      <div class="admin-setup-copy">
+        <p class="admin-kicker">{cmsUnavailable ? 'CMS / SETUP REQUIRED' : 'PRIVATE WORKSPACE / OWNER ACCESS'}</p>
+        <h2>{cmsUnavailable ? 'Connect your content database.' : 'Your portfolio at a glance.'}</h2>
+        <p>{cmsUnavailable ? 'Run the Supabase CMS migration and configure the server-only service role key to load live content and activity.' : 'Published records, drafts, and recent changes from your Supabase content store.'}</p>
+      </div>
+      <div class="admin-setup-status"><span class="admin-live-dot"></span> AUTHENTICATED</div>
+    </section>
+
+    <div class="admin-section-heading">
+      <div><p class="admin-kicker">CONTENT OVERVIEW</p><h2>Portfolio records</h2></div>
+      <span class="admin-muted-label">Live counts activate with CMS data storage</span>
+    </div>
+    <div class="admin-metric-grid">
+      {[
+        ['Published projects', metrics?.projects],
+        ['Published articles', metrics?.articles],
+        ['Drafts', metrics?.drafts],
+        ['Recent updates', metrics?.activity.length],
+      ].map(([label, hint]) => (
+        <article class="admin-metric-card">
+          <span class="metric-label">{label}</span>
+        <span class:list={['metric-value', { 'metric-pending': metrics === null }]}>{metrics ? hint : '—'}</span>
+        <span class="metric-hint">{metrics ? (label === 'Recent updates' ? 'Saved or published changes' : 'Current database count') : 'Unavailable until the CMS migration and environment are configured'}</span>
+        </article>
+      ))}
+    </div>
+
+    <div class="admin-dashboard-grid">
+      <section class="admin-panel">
+        <div class="admin-section-heading"><div><p class="admin-kicker">QUICK ACTIONS</p><h2>Make something</h2></div></div>
+        <div class="admin-action-list">
+          <a class:list={['admin-action-card', { disabled: cmsUnavailable }]} href="/admin/projects/"><span class="admin-action-icon">＋</span><span><strong>New project</strong><small>Open the project editor</small></span><span class="admin-action-arrow">↗</span></a>
+          <a class:list={['admin-action-card', { disabled: cmsUnavailable }]} href="/admin/articles/"><span class="admin-action-icon">＋</span><span><strong>Write an article</strong><small>Open the engineering journal editor</small></span><span class="admin-action-arrow">↗</span></a>
+        </div>
+      </section>
+      <section class="admin-panel admin-activity-panel">
+        <div class="admin-section-heading"><div><p class="admin-kicker">PUBLISHING LOG</p><h2>Recent activity</h2></div></div>
+        {metrics?.activity.length ? <ul class="admin-activity-list">{metrics.activity.map((entry) => <li><span class="activity-dot" aria-hidden="true"></span><span><strong>{entry.action} {entry.content_type ?? 'site content'}</strong><small>{entry.content_slug ?? 'Portfolio update'} · {new Date(entry.created_at).toLocaleString()}</small></span></li>)}</ul> : <div class="admin-empty-state"><span class="admin-empty-orbit" aria-hidden="true">◌</span><p>{cmsUnavailable ? 'Activity is unavailable.' : 'No activity recorded yet.'}</p><small>{cmsUnavailable ? 'Check that the Supabase schema migration has been applied.' : 'Saved and published changes will appear here.'}</small></div>}
+      </section>
+    </div>
+  </section>
+</AdminLayout>

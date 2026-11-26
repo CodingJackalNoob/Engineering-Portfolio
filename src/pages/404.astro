@@ -3,6 +3,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import '../styles/global.css';
+
+export const prerender = true;
 ---
 
 <BaseLayout title="404 — Page Not Found" description="The requested engineering portfolio page could not be found.">

@@ -2,24 +2,46 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import { getGeneratedAbout } from '../lib/cms/generated-settings';
 import '../styles/global.css';
+
+export const prerender = true;
+const about = await getGeneratedAbout();
 ---
 
-<BaseLayout title="About — Jainavaneeth Kumarashankar" description="About Jainavaneeth Kumarashankar and his work in mechanical and embedded systems engineering.">
+<BaseLayout title="About — Jainavaneeth Kumarashankar" description={about?.biography || "About Jainavaneeth Kumarashankar and his work in mechanical and embedded systems engineering."}>
   <Header />
   <main id="main-content" class="wrap">
-    <section class="hero">
-      <div class="eyebrow">// about</div>
-      <h1>Engineering systems from mechanism to firmware.</h1>
-      <p>I am a mechanical and embedded systems engineer interested in robotics, mechanical design, electronics, PCB development, and software.</p>
-    </section>
-    <section>
-      <div class="sec-head"><h2>Technical focus</h2><span class="sheet-no">DESIGN + BUILD + TEST</span></div>
-      <div class="grid">
-        <article class="card"><h3>Mechanical and robotics</h3><p>Mechanisms, actuators, assemblies, fabrication, and experimental robotics.</p></article>
-        <article class="card"><h3>Embedded systems</h3><p>Microcontrollers, firmware, electronics, sensors, and hardware-software integration.</p></article>
-      </div>
-    </section>
+    {about ? (
+      <>
+        <section class="about-cms-hero">
+          <div><div class="eyebrow">// about / field notes</div><h1>A little more about the person at the workbench.</h1><p>{about.biography}</p></div>
+          {about.profilePhoto && <figure><img src={about.profilePhoto} alt={about.profilePhotoAlt} fetchpriority="high" /></figure>}
+        </section>
+        {about.aspiration && <section class="about-cms-section"><div class="sec-head"><h2>What keeps me curious</h2><span class="sheet-no">MOTIVATION</span></div><p>{about.aspiration}</p></section>}
+        {about.skills.length > 0 && <section class="about-cms-section"><div class="sec-head"><h2>Skills and interests</h2><span class="sheet-no">IN PRACTICE</span></div><div class="tags">{about.skills.map((skill) => <span class="tag">{skill}</span>)}</div></section>}
+        {about.education.length > 0 && <section class="about-cms-section"><div class="sec-head"><h2>Education</h2><span class="sheet-no">LEARNING</span></div><div class="grid">{about.education.map((item) => <article class="card about-record"><p class="eyebrow">{item.years}</p><h3>{item.institution}</h3><p>{item.program}</p>{item.detail && <p>{item.detail}</p>}</article>)}</div></section>}
+        {about.experience.length > 0 && <section class="about-cms-section"><div class="sec-head"><h2>Experience</h2><span class="sheet-no">WHAT I'VE DONE</span></div><div class="grid">{about.experience.map((item) => <article class="card about-record"><p class="eyebrow">{item.dates}</p><h3>{item.role}</h3><p>{item.organization}</p>{item.description && <p>{item.description}</p>}</article>)}</div></section>}
+        {about.achievements.length > 0 && <section class="about-cms-section"><div class="sec-head"><h2>Achievements</h2><span class="sheet-no">MILESTONES</span></div><ul class="about-list">{about.achievements.map((item) => <li>{item}</li>)}</ul></section>}
+        {about.activities.length > 0 && <section class="about-cms-section"><div class="sec-head"><h2>Robotics and community</h2><span class="sheet-no">BEYOND THE BENCH</span></div><ul class="about-list">{about.activities.map((item) => <li>{item}</li>)}</ul></section>}
+        {(about.socialLinks.github || about.socialLinks.linkedin || about.socialLinks.website) && <section class="about-cms-section"><div class="sec-head"><h2>Find me elsewhere</h2><span class="sheet-no">LINKS</span></div><div class="resource-links">{about.socialLinks.github && <a href={about.socialLinks.github} target="_blank" rel="noopener noreferrer">GitHub ↗</a>}{about.socialLinks.linkedin && <a href={about.socialLinks.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn ↗</a>}{about.socialLinks.website && <a href={about.socialLinks.website} target="_blank" rel="noopener noreferrer">Website ↗</a>}</div></section>}
+      </>
+    ) : (
+      <>
+        <section class="hero">
+          <div class="eyebrow">// about</div>
+          <h1>Engineering systems from mechanism to firmware.</h1>
+          <p>I am a mechanical and embedded systems engineer interested in robotics, mechanical design, electronics, PCB development, and software.</p>
+        </section>
+        <section>
+          <div class="sec-head"><h2>Technical focus</h2><span class="sheet-no">DESIGN + BUILD + TEST</span></div>
+          <div class="grid">
+            <article class="card"><h3>Mechanical and robotics</h3><p>Mechanisms, actuators, assemblies, fabrication, and experimental robotics.</p></article>
+            <article class="card"><h3>Embedded systems</h3><p>Microcontrollers, firmware, electronics, sensors, and hardware-software integration.</p></article>
+          </div>
+        </section>
+      </>
+    )}
   </main>
   <Footer />
 </BaseLayout>

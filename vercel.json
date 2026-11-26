@@ -1,4 +1,10 @@
 {
   "framework": "astro",
-  "cleanUrls": true
+  "cleanUrls": true,
+  "crons": [
+    {
+      "path": "/api/cron/publish",
+      "schedule": "0 12 * * *"
+    }
+  ]
 }

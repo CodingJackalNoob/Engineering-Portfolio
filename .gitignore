@@ -1,4 +1,9 @@
 node_modules/
 dist/
 .astro/
+.vercel/
+.cms-generated/
 .DS_Store
+.env
+.env.*
+!.env.example

@@ -6,13 +6,33 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro check && astro build",
+    "build": "node scripts/sync-cms-content.mjs && astro check && astro build",
+    "cms:import": "node scripts/import-existing-content.mjs",
     "preview": "astro preview"
   },
   "dependencies": {
-    "@astrojs/mdx": "^4.3.12",
-    "@astrojs/check": "^0.9.6",
-    "astro": "^5.16.5",
-    "typescript": "^5.9.3"
+    "@astrojs/check": "^0.9.12",
+    "@astrojs/markdown-remark": "^7.3.10",
+    "@astrojs/mdx": "^8.1.6",
+    "@astrojs/vercel": "^11.0.22",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.119.2",
+    "astro": "^7.4.13",
+    "dompurify": "^3.5.0",
+    "dotenv": "^18.0.10",
+    "gray-matter": "^4.0.3",
+    "marked": "^18.3.0",
+    "rehype-sanitize": "^6.0.0",
+    "sharp": "^0.35.5",
+    "typescript": "^5.9.3",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.7"
+  },
+  "overrides": {
+    "@vercel/routing-utils": {
+      "path-to-regexp": "6.3.0"
+    }
   }
 }

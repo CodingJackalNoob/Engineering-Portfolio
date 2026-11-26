@@ -1,0 +1,23 @@
+---
+import '../styles/admin.css';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+Astro.response.headers.set('Cache-Control', 'private, no-store, max-age=0');
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <meta name="theme-color" content="#090e18" />
+    <title>{title} — Portfolio Studio</title>
+  </head>
+  <body class="admin-body"><slot /></body>
+</html>

@@ -1,0 +1,65 @@
+---
+import '../styles/admin.css';
+
+interface Props {
+  title: string;
+  activeSection: 'dashboard' | 'projects' | 'articles' | 'media' | 'about' | 'settings';
+}
+
+const { title, activeSection } = Astro.props;
+Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+Astro.response.headers.set('Cache-Control', 'private, no-store, max-age=0');
+
+const navigation = [
+  { id: 'dashboard', label: 'Dashboard', href: '/admin/' },
+  { id: 'projects', label: 'Projects', href: '/admin/projects/' },
+  { id: 'articles', label: 'Blog / Articles', href: '/admin/articles/' },
+  { id: 'media', label: 'Media Library', href: '/admin/media/' },
+  { id: 'about', label: 'About Page', href: '/admin/about/' },
+  { id: 'settings', label: 'Site Settings', href: '/admin/settings/' },
+] as const;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <meta name="theme-color" content="#090e18" />
+    <title>{title} — Portfolio Studio</title>
+  </head>
+  <body class="admin-body">
+    <div class="admin-shell">
+      <aside class="admin-sidebar">
+        <a class="admin-brand" href="/admin/" aria-label="Portfolio Studio dashboard">
+          <span class="admin-brand-mark">JK</span>
+          <span><strong>Portfolio Studio</strong><small>OWNER WORKSPACE</small></span>
+        </a>
+        <nav class="admin-nav" aria-label="Admin navigation">
+          <p class="admin-nav-label">WORKSPACE</p>
+          {navigation.map((item) => (
+            <a class:list={['admin-nav-link', { active: item.id === activeSection }]} href={item.href} aria-current={item.id === activeSection ? 'page' : undefined}>
+              <span class="admin-nav-dot" aria-hidden="true"></span>{item.label}
+              {['media', 'about', 'settings'].includes(item.id) && <span class="admin-nav-soon">SOON</span>}
+            </a>
+          ))}
+        </nav>
+        <div class="admin-sidebar-bottom">
+          <a class="admin-back-link" href="/">← View public site</a>
+          <form method="post" action="/api/admin/logout/">
+            <button class="admin-logout" type="submit"><span aria-hidden="true">↗</span> Log out</button>
+          </form>
+        </div>
+      </aside>
+      <main class="admin-main">
+        <header class="admin-topbar">
+          <div class="admin-mobile-brand"><span class="admin-brand-mark">JK</span> PORTFOLIO STUDIO</div>
+          <span class="admin-topbar-label">PRIVATE CONTENT WORKSPACE</span>
+          <a class="admin-view-site" href="/">View site <span aria-hidden="true">↗</span></a>
+        </header>
+        <slot />
+      </main>
+    </div>
+  </body>
+</html>

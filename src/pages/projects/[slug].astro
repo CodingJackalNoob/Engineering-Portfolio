@@ -2,11 +2,14 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import { getCollection, render } from 'astro:content';
+import { render } from 'astro:content';
+import { getPublicProjects } from '../../lib/cms/public-content';
 import '../../styles/global.css';
 
+export const prerender = true;
+
 export async function getStaticPaths() {
-  const projects = await getCollection('projects');
+  const projects = await getPublicProjects();
   return projects.map((project) => ({ params: { slug: project.data.slug ?? project.id }, props: { project } }));
 }
 
@@ -31,10 +34,19 @@ const formattedDate = project.data.date.toLocaleDateString('en-US', { year: 'num
         </div>
       </header>
       <div class="detail-layout">
-        <div class="article"><Content /></div>
+        <div class="article">
+          <Content />
+          {project.data.videoEmbed && <div class="video-embed"><iframe src={project.data.videoEmbed} title={`${project.data.title} video`} loading="lazy" sandbox="allow-scripts allow-same-origin allow-presentation" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>}
+          {project.data.designProcess && <section class="project-detail-section"><h2>Design process</h2><p>{project.data.designProcess}</p></section>}
+          {project.data.hardware && <section class="project-detail-section"><h2>Hardware</h2><p>{project.data.hardware}</p></section>}
+          {project.data.software && <section class="project-detail-section"><h2>Software</h2><p>{project.data.software}</p></section>}
+          {project.data.progress && <section class="project-detail-section"><h2>Current progress</h2><p>{project.data.progress}</p></section>}
+          {project.data.challenges && <section class="project-detail-section"><h2>Challenges and solutions</h2><p>{project.data.challenges}</p></section>}
+          {project.data.futureImprovements && <section class="project-detail-section"><h2>Future improvements</h2><p>{project.data.futureImprovements}</p></section>}
+        </div>
         <aside class="detail-aside" aria-label="Project reference">
           {toc.length > 0 && <nav class="toc" aria-label="On this page"><strong class="eyebrow">On this page</strong><ul>{toc.map((heading) => <li><a href={`#${heading.slug}`}>{heading.text}</a></li>)}</ul></nav>}
-          <div class="aside-panel"><h2>Project record</h2><dl><dt>Category</dt><dd>{project.data.category}</dd><dt>Status</dt><dd>{project.data.status}</dd><dt>Started</dt><dd>{formattedDate}</dd></dl></div>
+          <div class="aside-panel"><h2>Project record</h2><dl><dt>Category</dt><dd>{project.data.category}</dd><dt>Status</dt><dd>{project.data.status}</dd><dt>Started</dt><dd>{(project.data.startDate ?? project.data.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' })}</dd>{project.data.completionDate && <><dt>Completed</dt><dd>{project.data.completionDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' })}</dd></>}</dl></div>
           <div class="aside-panel"><h2>Tools &amp; technologies</h2><div class="tags">{project.data.technologies.map((technology) => <span class="tag">{technology}</span>)}</div></div>
           {(project.data.links.github || project.data.links.documentation || project.data.links.video || project.data.links.external) && <div class="aside-panel"><h2>Resources</h2><div class="resource-links">
             {project.data.links.github && <a href={project.data.links.github} target="_blank" rel="noopener noreferrer">GitHub ↗</a>}

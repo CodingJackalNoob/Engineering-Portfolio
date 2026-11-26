@@ -1,0 +1,72 @@
+---
+import AdminLoginLayout from '../../layouts/AdminLoginLayout.astro';
+import { isAdminAuthConfigured, getAdminSession } from '../../lib/admin/auth';
+
+export const prerender = false;
+Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+Astro.response.headers.set('Cache-Control', 'private, no-store, max-age=0');
+
+if (isAdminAuthConfigured()) {
+  const session = await getAdminSession(Astro.request, Astro.cookies);
+  if (session.ok) return Astro.redirect('/admin/');
+}
+---
+
+<AdminLoginLayout title="Admin sign in">
+  <main class="login-page">
+    <a class="login-back" href="/">← Back to portfolio</a>
+    <section class="login-card" aria-labelledby="login-title">
+      <div class="login-mark">JK</div>
+      <p class="admin-kicker">PRIVATE WORKSPACE / OWNER ACCESS</p>
+      <h1 id="login-title">Welcome back.</h1>
+      <p class="login-intro">Sign in to manage your portfolio content.</p>
+      <form class="login-form" id="admin-login-form">
+        <label for="email">Email address</label>
+        <input id="email" name="email" type="email" autocomplete="username" required />
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required />
+        <p class="login-error" id="login-error" role="alert" hidden></p>
+        <button class="admin-primary-button" type="submit"><span>Sign in securely</span><span aria-hidden="true">→</span></button>
+      </form>
+      <p class="login-footnote"><span aria-hidden="true">◈</span> Protected with private, encrypted session cookies.</p>
+    </section>
+  </main>
+  <script>
+    const form = document.querySelector<HTMLFormElement>('#admin-login-form');
+    const errorBox = document.querySelector<HTMLElement>('#login-error');
+    const submitButton = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
+
+    form?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!errorBox || !submitButton) return;
+      errorBox.hidden = true;
+      submitButton.disabled = true;
+      submitButton.querySelector('span')!.textContent = 'Signing in…';
+
+      const values = new FormData(form);
+      try {
+        const response = await fetch('/api/admin/login/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: values.get('email'),
+            password: values.get('password'),
+          }),
+        });
+        const result = await response.json() as { error?: string; redirect?: string };
+        if (!response.ok || !result.redirect) {
+          errorBox.textContent = result.error ?? 'Sign-in failed. Please try again.';
+          errorBox.hidden = false;
+          return;
+        }
+        window.location.assign(result.redirect);
+      } catch {
+        errorBox.textContent = 'Unable to reach the sign-in service. Please try again.';
+        errorBox.hidden = false;
+      } finally {
+        submitButton.disabled = false;
+        submitButton.querySelector('span')!.textContent = 'Sign in securely';
+      }
+    });
+  </script>
+</AdminLoginLayout>

@@ -1,0 +1,807 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getAdminSession } from '../../lib/admin/auth';
+
+export const prerender = false;
+
+const session = await getAdminSession(Astro.request, Astro.cookies);
+if (!session.ok) return Astro.redirect('/admin/login/');
+
+const sections = {
+  projects: { title: 'Projects', label: 'PROJECT ARCHIVE', message: 'Create and maintain engineering project records.' },
+  articles: { title: 'Blog / Articles', label: 'ENGINEERING JOURNAL', message: 'Write and publish technical notes and build documentation.' },
+  media: { title: 'Media Library', label: 'ASSET WORKSPACE', message: 'Protected uploads and media organization will be connected to Supabase Storage in a later CMS stage.' },
+  about: { title: 'About Page', label: 'PERSONAL PROFILE', message: 'About-page editing will be connected to the Supabase content store in a later CMS stage.' },
+  settings: { title: 'Site Settings', label: 'PORTFOLIO CONFIGURATION', message: 'Site settings will be editable after the content schema is in place.' },
+} as const;
+
+const section = sections[Astro.params.section as keyof typeof sections];
+if (!section) return new Response('Not found', { status: 404 });
+const editorType = Astro.params.section === 'projects'
+  ? 'project'
+  : Astro.params.section === 'articles'
+    ? 'article'
+    : null;
+---
+
+<AdminLayout title={section.title} activeSection={Astro.params.section as keyof typeof sections}>
+  <section class="admin-content">
+    <div class="admin-page-heading">
+      <div><p class="admin-kicker">{section.label}</p><h1>{section.title}</h1><p class="admin-subtitle">{section.message}</p></div>
+      {editorType && <button class="admin-primary-button editor-new-button" type="button" data-new-content>＋ New {editorType}</button>}
+    </div>
+    {editorType ? (
+      <>
+        <div class="editor-notice" id="editor-notice" role="status" aria-live="polite" hidden></div>
+        <section class="admin-content-list" aria-labelledby="records-heading">
+          <div class="admin-section-heading"><div><p class="admin-kicker">YOUR RECORDS</p><h2 id="records-heading">Saved {editorType === 'project' ? 'projects' : 'articles'}</h2></div></div>
+          <div id="content-records" class="content-records"><p class="admin-loading">Loading saved content…</p></div>
+        </section>
+
+        <section class="admin-editor-panel" id="content-editor-panel" hidden aria-labelledby="editor-heading">
+          <div class="admin-section-heading"><div><p class="admin-kicker">CONTENT EDITOR</p><h2 id="editor-heading">New {editorType}</h2></div><button class="admin-quiet-button" type="button" data-close-editor>Close</button></div>
+          <form id="content-editor" data-content-type={editorType}>
+            <input type="hidden" name="id" />
+            <div class="editor-fields-grid">
+              <label>Title<input name="title" maxlength="160" required /></label>
+              <label>URL slug<input name="slug" maxlength="100" pattern="[a-z0-9]+(-[a-z0-9]+)*" required /><small>Lowercase words separated by hyphens.</small></label>
+              <label class="field-full">Short description<textarea name="description" rows="2" maxlength="320" required></textarea></label>
+              {editorType === 'project' ? (
+                <>
+                  <label>Project category<select name="category"><option>Robotics</option><option>Mechanical Design</option><option>PCB Design</option><option>Embedded Systems</option><option>Software</option><option>Research &amp; Experiments</option></select></label>
+                  <label>Development status<select name="status"><option>Planning</option><option>In Progress</option><option>Completed</option><option>Paused</option></select></label>
+                  <label>Technologies<input name="technologies" placeholder="Arduino, C++, CAD" /><small>Separate items with commas.</small></label>
+                  <label>Project date<input name="date" type="date" required /></label>
+                  <label>Start date<input name="startDate" type="date" /></label>
+                  <label>Completion date<input name="completionDate" type="date" /></label>
+                  <label class="field-full">Overview<textarea name="overview" rows="3"></textarea></label>
+                  <label>Cover image URL<input name="coverImage" type="url" placeholder="https://…" /></label>
+                  <label>Cover image alt text<input name="coverAlt" maxlength="240" /></label>
+                  <label class="field-full">Additional image URLs<textarea name="images" rows="3" placeholder="One public image URL per line"></textarea><small>Use public image URLs for now; private media uploads are a later stage.</small></label>
+                  <label>GitHub URL<input name="github" type="url" /></label>
+                  <label>Documentation URL<input name="documentation" type="url" /></label>
+                  <label>Video URL<input name="video" type="url" /></label>
+                  <label>Other project link<input name="external" type="url" /></label>
+                  <label class="field-full">Video embed URL<input name="videoEmbed" type="url" placeholder="https://www.youtube-nocookie.com/embed/…" /><small>YouTube or Vimeo embed URL.</small></label>
+                  <label class="field-full">Design process<textarea name="designProcess" rows="3"></textarea></label>
+                  <label>Hardware<textarea name="hardware" rows="3"></textarea></label>
+                  <label>Software<textarea name="software" rows="3"></textarea></label>
+                  <label>Current progress<textarea name="progress" rows="3"></textarea></label>
+                  <label>Challenges and solutions<textarea name="challenges" rows="3"></textarea></label>
+                  <label class="field-full">Future improvements<textarea name="futureImprovements" rows="3"></textarea></label>
+                  <label class="editor-checkbox"><input name="featured" type="checkbox" /> Feature this project</label>
+                </>
+              ) : Astro.params.section === 'media' ? (
+                <>
+                  <section class="admin-media-tools" aria-labelledby="media-tools-title">
+                    <div class="admin-section-heading"><div><p class="admin-kicker">ASSET WORKSPACE</p><h2 id="media-tools-title">Upload and organize images</h2></div></div>
+                    <form id="media-upload-form" class="media-upload-form">
+                      <label>Images<input name="files" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple required /></label>
+                      <label>Alt text<input name="alt" maxlength="500" placeholder="Describe the image for accessibility" /></label>
+                      <label>Caption<input name="caption" maxlength="1000" /></label>
+                      <label>Collection<input name="folder" maxlength="80" placeholder="robotics, workbench…" /></label>
+                      <button class="admin-primary-button" type="submit">Upload images <span aria-hidden="true">↑</span></button>
+                    </form>
+                    <p class="media-upload-note">Images are resized and converted to WebP. New uploads stay private until you publish them. Maximum 12 MB per source image.</p>
+                  </section>
+                  <div class="media-toolbar">
+                    <label>Search media<input id="media-search" type="search" placeholder="Filename, alt text, folder" /></label>
+                    <label>Collection<select id="media-folder-filter"><option value="all">All collections</option></select></label>
+                  </div>
+                  <div class="editor-notice" id="media-message" role="status" aria-live="polite" hidden></div>
+                  <section id="media-library" class="media-library" aria-live="polite"><p class="admin-loading">Loading media…</p></section>
+                </>
+              ) : Astro.params.section === 'about' ? (
+                <>
+                  <div class="editor-notice" id="settings-message" role="status" aria-live="polite" hidden></div>
+                  <section class="admin-editor-panel">
+                    <div class="admin-section-heading"><div><p class="admin-kicker">PUBLIC PROFILE</p><h2>Edit your About page</h2></div></div>
+                    <form id="settings-editor" data-settings-key="about">
+                      <div class="editor-fields-grid">
+                        <label class="field-full">Biography<textarea name="biography" rows="6" maxlength="8000" required></textarea></label>
+                        <label class="field-full">What motivates you and where you hope to go<textarea name="aspiration" rows="4" maxlength="3000"></textarea></label>
+                        <label>Profile image URL<input name="profilePhoto" type="url" /></label>
+                        <label>Profile image alt text<input name="profilePhotoAlt" maxlength="500" /></label>
+                        <label class="field-full">Education entries<textarea name="education" rows="4" placeholder="Institution | Program | Years | Details"></textarea><small>One entry per line; separate the four fields with |.</small></label>
+                        <label class="field-full">Experience<textarea name="experience" rows="5" placeholder="Role | Organization | Dates | Description"></textarea><small>One entry per line; separate the four fields with |.</small></label>
+                        <label>Skills<textarea name="skills" rows="4" placeholder="One skill per line"></textarea></label>
+                        <label>Achievements<textarea name="achievements" rows="4" placeholder="One achievement per line"></textarea></label>
+                        <label class="field-full">Robotics, STEM outreach, and extracurricular activities<textarea name="activities" rows="4" placeholder="One activity per line"></textarea></label>
+                        <label>GitHub URL<input name="github" type="url" /></label>
+                        <label>LinkedIn URL<input name="linkedin" type="url" /></label>
+                        <label class="field-full">Personal website URL<input name="website" type="url" /></label>
+                      </div>
+                      <div class="editor-actions"><p class="editor-message" id="settings-status" role="status" aria-live="polite"></p><button class="admin-primary-button" type="submit">Save and publish</button></div>
+                    </form>
+                  </section>
+                </>
+              ) : Astro.params.section === 'settings' ? (
+                <>
+                  <div class="editor-notice" id="settings-message" role="status" aria-live="polite" hidden></div>
+                  <section class="admin-editor-panel">
+                    <div class="admin-section-heading"><div><p class="admin-kicker">SITE-WIDE METADATA</p><h2>Portfolio settings</h2></div></div>
+                    <form id="settings-editor" data-settings-key="site">
+                      <div class="editor-fields-grid">
+                        <label>Site name<input name="siteName" maxlength="120" required /></label>
+                        <label>Social preview image URL<input name="socialImage" type="url" /></label>
+                        <label class="field-full">Default site description<textarea name="siteDescription" rows="4" maxlength="320" required></textarea></label>
+                      </div>
+                      <p class="settings-help">Page-specific descriptions stay in place. The site name is used in page titles, and this description is the default when a page has no custom description.</p>
+                      <div class="editor-actions"><p class="editor-message" id="settings-status" role="status" aria-live="polite"></p><button class="admin-primary-button" type="submit">Save and publish</button></div>
+                    </form>
+                  </section>
+                </>
+              ) : (
+                <>
+                  <label>Subtitle<input name="subtitle" maxlength="240" /></label>
+                  <label>Category<input name="category" maxlength="80" required placeholder="Robotics, build log…" /></label>
+                  <label>Tags<input name="tags" placeholder="robotics, controls, build log" /><small>Separate tags with commas.</small></label>
+                  <label>Article date<input name="date" type="date" required /></label>
+                  <label>Estimated reading time<input name="readingTime" type="number" min="1" max="240" /></label>
+                  <label>Cover image URL<input name="coverImage" type="url" placeholder="https://…" /></label>
+                  <label>Cover image alt text<input name="coverAlt" maxlength="240" /></label>
+                  <label>SEO title<input name="seoTitle" maxlength="160" /></label>
+                  <label>SEO description<textarea name="seoDescription" rows="2" maxlength="320"></textarea></label>
+                  <label class="field-full">Video embed URL<input name="videoEmbed" type="url" placeholder="https://www.youtube-nocookie.com/embed/…" /><small>YouTube or Vimeo embed URL.</small></label>
+                  <label class="editor-checkbox"><input name="featured" type="checkbox" /> Feature this article</label>
+                </>
+              )}
+              <label>Publication state<select name="state"><option value="draft">Draft</option><option value="scheduled">Scheduled</option><option value="published">Published</option></select></label>
+              <label>Schedule for<input name="scheduledAt" type="datetime-local" /><small>Required only for scheduled content.</small></label>
+            </div>
+
+            <div class="markdown-editor">
+              <div class="markdown-heading"><div><p class="admin-kicker">DOCUMENTATION</p><h3>{editorType === 'project' ? 'Project documentation' : 'Article body'}</h3></div><span>MARKDOWN</span></div>
+              <div class="markdown-toolbar" role="toolbar" aria-label="Markdown formatting">
+                <button type="button" data-markdown="## ">H2</button><button type="button" data-markdown="### ">H3</button><button type="button" data-wrap="**">Bold</button><button type="button" data-wrap="*">Italic</button><button type="button" data-markdown="- ">List</button><button type="button" data-wrap="```\n">Code</button><button type="button" data-image-markdown>Image</button>
+              </div>
+              <div class="markdown-workspace">
+                <label class="markdown-source">Markdown source<textarea name="body" id="markdown-body" rows="18" placeholder="Document the idea, design decisions, build steps, and what you learned. Use Markdown headings, lists, links, code blocks, and image syntax." required></textarea></label>
+                <section class="markdown-preview-panel" aria-label="Rendered content preview"><p class="admin-kicker">PREVIEW</p><div id="markdown-preview" class="markdown-preview"><p class="preview-empty">Your formatted content preview appears here.</p></div></section>
+              </div>
+            </div>
+            <div class="editor-actions">
+              <p id="editor-message" class="editor-message" role="status" aria-live="polite"></p>
+              <button class="admin-quiet-button" type="button" data-save-state="draft">Save draft</button>
+              <button class="admin-quiet-button" type="button" data-save-state="scheduled">Schedule</button>
+              <button class="admin-primary-button" type="button" data-save-state="published">Publish</button>
+            </div>
+          </form>
+        </section>
+      </>
+    ) : (
+      <div class="admin-module-state">
+        <span class="admin-module-state-mark" aria-hidden="true">◌</span>
+        <p class="admin-kicker">CMS MODULE / IN PROGRESS</p>
+        <h2>This workspace is being prepared.</h2>
+        <p>{section.message}</p>
+        <a class="admin-text-link" href="/admin/">Return to dashboard <span aria-hidden="true">→</span></a>
+      </div>
+    )}
+  </section>
+</AdminLayout>
+
+{editorType && <script>
+  import { marked } from 'marked';
+  import DOMPurify from 'dompurify';
+
+  type ContentRecord = {
+    id: string;
+    content_type: 'project' | 'article';
+    slug: string;
+    data: Record<string, unknown>;
+    body: string;
+    publication_state: 'draft' | 'scheduled' | 'published';
+    scheduled_at: string | null;
+    updated_at: string;
+  };
+
+  const form = document.querySelector<HTMLFormElement>('#content-editor');
+  const panel = document.querySelector<HTMLElement>('#content-editor-panel');
+  const records = document.querySelector<HTMLElement>('#content-records');
+  const notice = document.querySelector<HTMLElement>('#editor-notice');
+  const message = document.querySelector<HTMLElement>('#editor-message');
+  const bodyInput = document.querySelector<HTMLTextAreaElement>('#markdown-body');
+  const preview = document.querySelector<HTMLElement>('#markdown-preview');
+
+  const showMessage = (target: HTMLElement | null, text: string, isError = false) => {
+    if (!target) return;
+    target.textContent = text;
+    target.classList.toggle('is-error', isError);
+    if (target === notice) target.hidden = !text;
+  };
+
+  const field = (name: string) => {
+    const control = form?.elements.namedItem(name);
+    return control instanceof HTMLInputElement || control instanceof HTMLTextAreaElement || control instanceof HTMLSelectElement
+      ? control
+      : null;
+  };
+  const read = (name: string) => field(name)?.value.trim() ?? '';
+  const set = (name: string, value: string | boolean) => {
+    const control = field(name);
+    if (control instanceof HTMLInputElement && control.type === 'checkbox') control.checked = value === true;
+    else if (control) control.value = String(value);
+  };
+  const dateField = (value: unknown) => typeof value === 'string' ? value.slice(0, 10) : '';
+
+  async function renderPreview() {
+    if (!bodyInput || !preview) return;
+    const source = bodyInput.value;
+    preview.innerHTML = source
+      ? DOMPurify.sanitize(await marked.parse(source))
+      : '<p class="preview-empty">Your formatted content preview appears here.</p>';
+  }
+
+  function resetEditor() {
+    form?.reset();
+    set('id', '');
+    set('date', new Date().toISOString().slice(0, 10));
+    set('state', 'draft');
+    showMessage(message, '');
+    if (panel) panel.hidden = false;
+    document.querySelector('#editor-heading')!.textContent = `New ${form?.dataset.contentType}`;
+    void renderPreview();
+    panel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function renderRecords(items: ContentRecord[]) {
+    if (!records) return;
+    records.replaceChildren();
+    if (!items.length) {
+      const empty = document.createElement('p');
+      empty.className = 'admin-empty-records';
+      empty.textContent = 'No CMS records yet. Existing local project files remain published until you import them.';
+      records.append(empty);
+      return;
+    }
+
+    const list = document.createElement('div');
+    list.className = 'content-record-list';
+    for (const item of items) {
+      const row = document.createElement('article');
+      row.className = 'content-record';
+      const info = document.createElement('div');
+      const title = document.createElement('strong');
+      title.textContent = String(item.data.title ?? item.slug);
+      const meta = document.createElement('small');
+      meta.textContent = `${item.slug} · ${item.publication_state} · updated ${new Date(item.updated_at).toLocaleDateString()}`;
+      info.append(title, meta);
+
+      const actions = document.createElement('div');
+      actions.className = 'content-record-actions';
+      const edit = document.createElement('button');
+      edit.type = 'button';
+      edit.className = 'admin-quiet-button';
+      edit.textContent = 'Edit';
+      edit.addEventListener('click', () => editRecord(item));
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'admin-quiet-button danger';
+      remove.textContent = 'Delete';
+      remove.addEventListener('click', () => void deleteRecord(item));
+      actions.append(edit, remove);
+      row.append(info, actions);
+      list.append(row);
+    }
+    records.append(list);
+  }
+
+  async function loadRecords() {
+    if (!records) return;
+    try {
+      const response = await fetch(`/api/admin/content/?type=${form?.dataset.contentType}`);
+      const result = await response.json() as { items?: ContentRecord[]; error?: string };
+      if (!response.ok) throw new Error(result.error ?? 'Could not load content records.');
+      renderRecords(result.items ?? []);
+    } catch (error) {
+      records.textContent = error instanceof Error ? error.message : 'Could not load content records.';
+      records.classList.add('is-error');
+    }
+  }
+
+  function editRecord(item: ContentRecord) {
+    if (!form || !panel) return;
+    form.reset();
+    set('id', item.id);
+    set('title', String(item.data.title ?? ''));
+    set('slug', item.slug);
+    set('description', String(item.data.description ?? ''));
+    set('date', dateField(item.data.date));
+    set('coverImage', String(item.data.coverImage ?? ''));
+    set('coverAlt', String(item.data.coverAlt ?? ''));
+    set('featured', item.data.featured === true);
+    set('state', item.publication_state);
+    set('scheduledAt', item.scheduled_at ? item.scheduled_at.slice(0, 16) : '');
+    set('body', item.body);
+
+    if (item.content_type === 'project') {
+      set('overview', String(item.data.overview ?? ''));
+      set('category', String(item.data.category ?? 'Robotics'));
+      set('status', String(item.data.status ?? 'Planning'));
+      set('technologies', Array.isArray(item.data.technologies) ? item.data.technologies.join(', ') : '');
+      set('startDate', dateField(item.data.startDate));
+      set('completionDate', dateField(item.data.completionDate));
+      set('images', Array.isArray(item.data.images) ? item.data.images.map((image) => typeof image === 'object' && image && 'src' in image ? image.src : '').join('\n') : '');
+      const links = typeof item.data.links === 'object' && item.data.links ? item.data.links as Record<string, unknown> : {};
+      for (const key of ['github', 'documentation', 'video', 'external']) set(key, String(links[key] ?? ''));
+      for (const key of ['designProcess', 'hardware', 'software', 'progress', 'challenges', 'futureImprovements']) {
+        set(key, String(item.data[key] ?? ''));
+      }
+      set('videoEmbed', String(item.data.videoEmbed ?? ''));
+    } else {
+      set('subtitle', String(item.data.subtitle ?? ''));
+      set('category', String(item.data.category ?? ''));
+      set('tags', Array.isArray(item.data.tags) ? item.data.tags.join(', ') : '');
+      set('readingTime', String(item.data.readingTime ?? ''));
+      set('seoTitle', String(item.data.seoTitle ?? ''));
+      set('seoDescription', String(item.data.seoDescription ?? ''));
+      set('videoEmbed', String(item.data.videoEmbed ?? ''));
+    }
+    document.querySelector('#editor-heading')!.textContent = `Edit ${String(item.data.title ?? item.slug)}`;
+    panel.hidden = false;
+    showMessage(message, '');
+    void renderPreview();
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function buildPayload(state: 'draft' | 'scheduled' | 'published') {
+    if (!form) throw new Error('Editor form is unavailable.');
+    const type = form.dataset.contentType as 'project' | 'article';
+    const featuredControl = field('featured');
+    const base: Record<string, unknown> = {
+      title: read('title'),
+      slug: read('slug'),
+      description: read('description'),
+      date: read('date'),
+      coverImage: read('coverImage') || undefined,
+      coverAlt: read('coverAlt') || undefined,
+      featured: featuredControl instanceof HTMLInputElement && featuredControl.checked,
+    };
+    if (type === 'project') {
+      const optionalDate = (name: string) => read(name) ? read(name) : undefined;
+      const images = read('images').split('\n').map((src) => src.trim()).filter(Boolean).map((src) => ({ src, alt: read('title') }));
+      Object.assign(base, {
+        overview: read('overview') || undefined,
+        category: read('category'),
+        status: read('status'),
+        technologies: read('technologies').split(',').map((item) => item.trim()).filter(Boolean),
+        startDate: optionalDate('startDate'),
+        completionDate: optionalDate('completionDate'),
+        images,
+        links: {
+          github: read('github') || undefined,
+          documentation: read('documentation') || undefined,
+          video: read('video') || undefined,
+          external: read('external') || undefined,
+        },
+        designProcess: read('designProcess') || undefined,
+        hardware: read('hardware') || undefined,
+        software: read('software') || undefined,
+        progress: read('progress') || undefined,
+        challenges: read('challenges') || undefined,
+        futureImprovements: read('futureImprovements') || undefined,
+        videoEmbed: read('videoEmbed') || undefined,
+      });
+    } else {
+      Object.assign(base, {
+        subtitle: read('subtitle') || undefined,
+        category: read('category'),
+        tags: read('tags').split(',').map((item) => item.trim()).filter(Boolean),
+        readingTime: read('readingTime') ? Number(read('readingTime')) : undefined,
+        seoTitle: read('seoTitle') || undefined,
+        seoDescription: read('seoDescription') || undefined,
+        videoEmbed: read('videoEmbed') || undefined,
+        draft: state !== 'published',
+      });
+    }
+    const scheduledAt = state === 'scheduled' && read('scheduledAt')
+      ? new Date(read('scheduledAt')).toISOString()
+      : undefined;
+    return {
+      id: read('id') || undefined,
+      type,
+      state,
+      scheduledAt,
+      data: base,
+      body: bodyInput?.value ?? '',
+    };
+  }
+
+  async function saveRecord(state: 'draft' | 'scheduled' | 'published') {
+    if (!form) return;
+    showMessage(message, 'Saving…');
+    const id = read('id');
+    const payload = buildPayload(state);
+    try {
+      const response = await fetch('/api/admin/content/', {
+        method: id ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json() as { item?: ContentRecord; error?: string; warning?: string };
+      if (!response.ok) throw new Error(result.warning ?? result.error ?? 'Could not save this record.');
+      showMessage(message, result.warning ?? 'Saved successfully.');
+      if (result.item) set('id', result.item.id);
+      await loadRecords();
+    } catch (error) {
+      showMessage(message, error instanceof Error ? error.message : 'Could not save this record.', true);
+    }
+  }
+
+  async function deleteRecord(item: ContentRecord) {
+    if (!window.confirm(`Delete "${String(item.data.title ?? item.slug)}"? This cannot be undone.`)) return;
+    try {
+      const response = await fetch(`/api/admin/content/?id=${encodeURIComponent(item.id)}`, { method: 'DELETE' });
+      const result = response.status === 204 ? {} : await response.json() as { error?: string; warning?: string };
+      if (!response.ok) throw new Error(result.warning ?? result.error ?? 'Could not delete the record.');
+      showMessage(notice, result.warning ?? `Deleted ${item.slug}.`);
+      await loadRecords();
+    } catch (error) {
+      showMessage(notice, error instanceof Error ? error.message : 'Could not delete the record.', true);
+    }
+  }
+
+  document.querySelector('[data-new-content]')?.addEventListener('click', resetEditor);
+  document.querySelector('[data-close-editor]')?.addEventListener('click', () => { if (panel) panel.hidden = true; });
+  document.querySelectorAll<HTMLButtonElement>('[data-save-state]').forEach((button) => {
+    button.addEventListener('click', () => void saveRecord(button.dataset.saveState as 'draft' | 'scheduled' | 'published'));
+  });
+  bodyInput?.addEventListener('input', () => void renderPreview());
+  document.querySelectorAll<HTMLButtonElement>('[data-markdown]').forEach((button) => {
+    button.addEventListener('click', () => {
+      if (!bodyInput) return;
+      const prefix = button.dataset.markdown ?? '';
+      const start = bodyInput.selectionStart;
+      const end = bodyInput.selectionEnd;
+      bodyInput.setRangeText(`${prefix}${bodyInput.value.slice(start, end)}`, start, end, 'select');
+      bodyInput.focus();
+      void renderPreview();
+    });
+  });
+  document.querySelectorAll<HTMLButtonElement>('[data-wrap]').forEach((button) => {
+    button.addEventListener('click', () => {
+      if (!bodyInput) return;
+      const wrapper = button.dataset.wrap ?? '';
+      const start = bodyInput.selectionStart;
+      const end = bodyInput.selectionEnd;
+      bodyInput.setRangeText(`${wrapper}${bodyInput.value.slice(start, end)}${wrapper}`, start, end, 'select');
+      bodyInput.focus();
+      void renderPreview();
+    });
+  });
+  document.querySelector('[data-image-markdown]')?.addEventListener('click', () => {
+    if (!bodyInput) return;
+    bodyInput.setRangeText('![Image description](https://image-url)', bodyInput.selectionStart, bodyInput.selectionEnd, 'end');
+    bodyInput.focus();
+    void renderPreview();
+  });
+  void loadRecords();
+</script>}
+
+{Astro.params.section === 'media' && <script>
+  type MediaItem = {
+    id: string;
+    bucket: string;
+    storage_path: string;
+    original_name: string;
+    size_bytes: number;
+    alt: string;
+    caption: string;
+    folder: string;
+    url: string | null;
+  };
+
+  const mediaLibrary = document.querySelector<HTMLElement>('#media-library');
+  const mediaMessage = document.querySelector<HTMLElement>('#media-message');
+  const mediaSearch = document.querySelector<HTMLInputElement>('#media-search');
+  const folderFilter = document.querySelector<HTMLSelectElement>('#media-folder-filter');
+  const uploadForm = document.querySelector<HTMLFormElement>('#media-upload-form');
+  let searchTimer: number | undefined;
+
+  function showMediaMessage(text: string, isError = false) {
+    if (!mediaMessage) return;
+    mediaMessage.textContent = text;
+    mediaMessage.hidden = !text;
+    mediaMessage.classList.toggle('is-error', isError);
+  }
+
+  async function loadMedia() {
+    if (!mediaLibrary) return;
+    mediaLibrary.replaceChildren();
+    const loading = document.createElement('p');
+    loading.className = 'admin-loading';
+    loading.textContent = 'Loading media…';
+    mediaLibrary.append(loading);
+    try {
+      const params = new URLSearchParams({
+        q: mediaSearch?.value.trim() ?? '',
+        folder: folderFilter?.value ?? 'all',
+      });
+      const response = await fetch(`/api/admin/media/?${params}`);
+      const result = await response.json() as { items?: MediaItem[]; folders?: string[]; error?: string };
+      if (!response.ok) throw new Error(result.error ?? 'Could not load media.');
+      renderMedia(result.items ?? []);
+      updateFolders(result.folders ?? []);
+    } catch (error) {
+      mediaLibrary.textContent = error instanceof Error ? error.message : 'Could not load media.';
+      mediaLibrary.classList.add('is-error');
+    }
+  }
+
+  function updateFolders(folders: string[]) {
+    if (!folderFilter) return;
+    const current = folderFilter.value;
+    folderFilter.replaceChildren(new Option('All collections', 'all'));
+    for (const folder of folders) folderFilter.add(new Option(folder, folder));
+    folderFilter.value = folders.includes(current) ? current : 'all';
+  }
+
+  function renderMedia(items: MediaItem[]) {
+    if (!mediaLibrary) return;
+    mediaLibrary.replaceChildren();
+    if (!items.length) {
+      const empty = document.createElement('p');
+      empty.className = 'admin-empty-records';
+      empty.textContent = 'No images match this view. Upload a real project or workspace photo to get started.';
+      mediaLibrary.append(empty);
+      return;
+    }
+    for (const item of items) {
+      const card = document.createElement('article');
+      card.className = 'media-card';
+      const image = document.createElement('img');
+      image.src = item.url ?? '';
+      image.alt = item.alt;
+      image.loading = 'lazy';
+      image.className = 'media-card-image';
+      const details = document.createElement('div');
+      details.className = 'media-card-details';
+      const name = document.createElement('strong');
+      name.textContent = item.original_name;
+      const info = document.createElement('small');
+      info.textContent = `${item.folder} · ${(item.size_bytes / 1024).toFixed(0)} KB · ${item.bucket === 'portfolio-media' ? 'public' : 'private'}`;
+      details.append(name, info);
+
+      const altLabel = document.createElement('label');
+      altLabel.textContent = 'Alt text';
+      const alt = document.createElement('input');
+      alt.value = item.alt;
+      alt.maxLength = 500;
+      altLabel.append(alt);
+      const captionLabel = document.createElement('label');
+      captionLabel.textContent = 'Caption';
+      const caption = document.createElement('input');
+      caption.value = item.caption;
+      caption.maxLength = 1000;
+      captionLabel.append(caption);
+      const folderLabel = document.createElement('label');
+      folderLabel.textContent = 'Collection';
+      const folder = document.createElement('input');
+      folder.value = item.folder;
+      folder.maxLength = 80;
+      folderLabel.append(folder);
+
+      const actions = document.createElement('div');
+      actions.className = 'media-card-actions';
+      const save = document.createElement('button');
+      save.type = 'button';
+      save.className = 'admin-quiet-button';
+      save.textContent = 'Save details';
+      save.addEventListener('click', () => void updateMedia(item.id, { alt: alt.value, caption: caption.value, folder: folder.value }));
+      const copy = document.createElement('button');
+      copy.type = 'button';
+      copy.className = 'admin-quiet-button';
+      copy.textContent = 'Copy URL';
+      copy.disabled = !item.url;
+      copy.addEventListener('click', async () => {
+        if (!item.url) return;
+        try {
+          await navigator.clipboard.writeText(item.url);
+          showMediaMessage('Image URL copied.');
+        } catch {
+          showMediaMessage('Clipboard access is unavailable in this browser.', true);
+        }
+      });
+      if (item.bucket !== 'portfolio-media') {
+        const publish = document.createElement('button');
+        publish.type = 'button';
+        publish.className = 'admin-primary-button';
+        publish.textContent = 'Publish image';
+        publish.addEventListener('click', () => void publishMedia(item.id));
+        actions.append(publish);
+      }
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'admin-quiet-button danger';
+      remove.textContent = 'Delete';
+      remove.addEventListener('click', () => void deleteMedia(item));
+      actions.append(save, copy, remove);
+      card.append(image, details, altLabel, captionLabel, folderLabel, actions);
+      mediaLibrary.append(card);
+    }
+  }
+
+  async function sendMediaAction(method: string, payload: Record<string, unknown>) {
+    const response = await fetch('/api/admin/media/', {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const result = response.status === 204 ? {} : await response.json() as { error?: string; warning?: string };
+    if (!response.ok) throw new Error(result.warning ?? result.error ?? 'Media action failed.');
+    return result;
+  }
+
+  async function updateMedia(id: string, fields: { alt: string; caption: string; folder: string }) {
+    try {
+      await sendMediaAction('PATCH', { id, action: 'update', ...fields });
+      showMediaMessage('Media details saved.');
+      await loadMedia();
+    } catch (error) {
+      showMediaMessage(error instanceof Error ? error.message : 'Could not save media details.', true);
+    }
+  }
+
+  async function publishMedia(id: string) {
+    try {
+      await sendMediaAction('PATCH', { id, action: 'publish' });
+      showMediaMessage('Image published and now has a public URL.');
+      await loadMedia();
+    } catch (error) {
+      showMediaMessage(error instanceof Error ? error.message : 'Could not publish the image.', true);
+    }
+  }
+
+  async function deleteMedia(item: MediaItem) {
+    if (!window.confirm(`Delete "${item.original_name}"? In-use images cannot be deleted.`)) return;
+    try {
+      const response = await fetch(`/api/admin/media/?id=${encodeURIComponent(item.id)}`, { method: 'DELETE' });
+      const result = response.status === 204 ? {} : await response.json() as { error?: string; warning?: string };
+      if (!response.ok) throw new Error(result.warning ?? result.error ?? 'Could not delete the image.');
+      showMediaMessage('Image deleted.');
+      await loadMedia();
+    } catch (error) {
+      showMediaMessage(error instanceof Error ? error.message : 'Could not delete the image.', true);
+    }
+  }
+
+  uploadForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const fileInput = uploadForm.querySelector<HTMLInputElement>('input[name="files"]');
+    const files = Array.from(fileInput?.files ?? []);
+    if (!files.length) return;
+    showMediaMessage(`Uploading ${files.length} image${files.length === 1 ? '' : 's'}…`);
+    const values = new FormData(uploadForm);
+    try {
+      for (const file of files) {
+        const payload = new FormData();
+        payload.set('file', file);
+        payload.set('alt', String(values.get('alt') ?? ''));
+        payload.set('caption', String(values.get('caption') ?? ''));
+        payload.set('folder', String(values.get('folder') ?? ''));
+        const response = await fetch('/api/admin/media/', { method: 'POST', body: payload });
+        const result = await response.json() as { error?: string };
+        if (!response.ok) throw new Error(result.error ?? `Could not upload ${file.name}.`);
+      }
+      uploadForm.reset();
+      showMediaMessage(`Uploaded ${files.length} image${files.length === 1 ? '' : 's'}.`);
+      await loadMedia();
+    } catch (error) {
+      showMediaMessage(error instanceof Error ? error.message : 'Image upload failed.', true);
+      await loadMedia();
+    }
+  });
+
+  mediaSearch?.addEventListener('input', () => {
+    window.clearTimeout(searchTimer);
+    searchTimer = window.setTimeout(() => void loadMedia(), 180);
+  });
+  folderFilter?.addEventListener('change', () => void loadMedia());
+  void loadMedia();
+</script>}
+
+{['about', 'settings'].includes(Astro.params.section ?? '') && <script>
+  const settingsForm = document.querySelector<HTMLFormElement>('#settings-editor');
+  const settingsMessage = document.querySelector<HTMLElement>('#settings-message');
+  const settingsStatus = document.querySelector<HTMLElement>('#settings-status');
+
+  const settingsField = (name: string) => {
+    const control = settingsForm?.elements.namedItem(name);
+    return control instanceof HTMLInputElement || control instanceof HTMLTextAreaElement ? control : null;
+  };
+  const settingsValue = (name: string) => settingsField(name)?.value.trim() ?? '';
+  const setSettingsValue = (name: string, value: string) => {
+    const field = settingsField(name);
+    if (field) field.value = value;
+  };
+  const lines = (name: string) => settingsValue(name).split('\n').map((line) => line.trim()).filter(Boolean);
+
+  function showSettingsMessage(text: string, error = false) {
+    if (!settingsMessage) return;
+    settingsMessage.textContent = text;
+    settingsMessage.hidden = !text;
+    settingsMessage.classList.toggle('is-error', error);
+  }
+
+  async function loadSettings() {
+    if (!settingsForm) return;
+    try {
+      const key = settingsForm.dataset.settingsKey;
+      const response = await fetch(`/api/admin/settings/?key=${key}`);
+      const result = await response.json() as { settings?: Record<string, Record<string, unknown>>; error?: string };
+      if (!response.ok) throw new Error(result.error ?? 'Could not load settings.');
+      const values = result.settings?.[key ?? ''] ?? {};
+      if (key === 'about') {
+        for (const name of ['biography', 'aspiration', 'profilePhoto', 'profilePhotoAlt']) setSettingsValue(name, String(values[name] ?? ''));
+        const education = Array.isArray(values.education) ? values.education as Array<Record<string, string>> : [];
+        setSettingsValue('education', education.map((item) => [item.institution, item.program, item.years, item.detail].join(' | ')).join('\n'));
+        const experience = Array.isArray(values.experience) ? values.experience as Array<Record<string, string>> : [];
+        setSettingsValue('experience', experience.map((item) => [item.role, item.organization, item.dates, item.description].join(' | ')).join('\n'));
+        for (const name of ['skills', 'achievements', 'activities']) {
+          setSettingsValue(name, Array.isArray(values[name]) ? (values[name] as string[]).join('\n') : '');
+        }
+        const links = typeof values.socialLinks === 'object' && values.socialLinks ? values.socialLinks as Record<string, string> : {};
+        for (const name of ['github', 'linkedin', 'website']) setSettingsValue(name, String(links[name] ?? ''));
+      } else {
+        for (const name of ['siteName', 'siteDescription', 'socialImage']) setSettingsValue(name, String(values[name] ?? ''));
+      }
+    } catch (error) {
+      showSettingsMessage(error instanceof Error ? error.message : 'Could not load settings.', true);
+    }
+  }
+
+  settingsForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!settingsForm) return;
+    const key = settingsForm.dataset.settingsKey as 'about' | 'site';
+    const status = settingsStatus;
+    if (status) { status.textContent = 'Saving and publishing…'; status.classList.remove('is-error'); }
+    let value: Record<string, unknown>;
+    if (key === 'about') {
+      const education = lines('education').map((line) => line.split('|').map((part) => part.trim()));
+      const experience = lines('experience').map((line) => line.split('|').map((part) => part.trim()));
+      if (education.some((entry) => entry.length !== 4) || experience.some((entry) => entry.length !== 4)) {
+        if (status) { status.textContent = 'Each education and experience line must contain exactly four | separated fields.'; status.classList.add('is-error'); }
+        return;
+      }
+      value = {
+        biography: settingsValue('biography'),
+        aspiration: settingsValue('aspiration'),
+        profilePhoto: settingsValue('profilePhoto') || undefined,
+        profilePhotoAlt: settingsValue('profilePhotoAlt'),
+        education: education.map(([institution, program, years, detail]) => ({ institution, program, years, detail })),
+        experience: experience.map(([role, organization, dates, description]) => ({ role, organization, dates, description })),
+        skills: lines('skills'),
+        achievements: lines('achievements'),
+        activities: lines('activities'),
+        socialLinks: {
+          github: settingsValue('github') || undefined,
+          linkedin: settingsValue('linkedin') || undefined,
+          website: settingsValue('website') || undefined,
+        },
+      };
+    } else {
+      value = {
+        siteName: settingsValue('siteName'),
+        siteDescription: settingsValue('siteDescription'),
+        socialImage: settingsValue('socialImage') || undefined,
+      };
+    }
+    try {
+      const response = await fetch('/api/admin/settings/', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, value }),
+      });
+      const result = await response.json() as { error?: string; warning?: string };
+      if (!response.ok) throw new Error(result.warning ?? result.error ?? 'Could not save settings.');
+      if (status) status.textContent = result.warning ?? 'Saved. A Vercel deployment was triggered.';
+      showSettingsMessage(result.warning ?? 'Settings updated and deployment triggered.');
+    } catch (error) {
+      if (status) { status.textContent = error instanceof Error ? error.message : 'Could not save settings.'; status.classList.add('is-error'); }
+    }
+  });
+
+  void loadSettings();
+</script>}

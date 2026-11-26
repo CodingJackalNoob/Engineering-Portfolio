@@ -2,10 +2,12 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import { getCollection } from 'astro:content';
+import { getPublicProjects } from '../../lib/cms/public-content';
 import '../../styles/global.css';
 
-const projects = (await getCollection('projects')).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+export const prerender = true;
+
+const projects = (await getPublicProjects()).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 const categoryList = ['Robotics', 'Mechanical Design', 'PCB Design', 'Embedded Systems', 'Software', 'Research & Experiments'];
 const categories = ['All', ...categoryList];
 ---

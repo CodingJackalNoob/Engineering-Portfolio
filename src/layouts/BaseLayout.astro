@@ -1,5 +1,6 @@
 ---
 import { ClientRouter } from 'astro:transitions';
+import { getGeneratedSiteSettings } from '../lib/cms/generated-settings';
 
 interface Props {
   title?: string;
@@ -7,12 +8,14 @@ interface Props {
   image?: string;
 }
 
-const {
-  title = 'Jainavaneeth Kumarashankar',
-  description = 'Mechanical engineering, robotics, embedded systems, electronics, and software projects.',
-  image = '/og-default.svg',
-} = Astro.props;
-const canonical = new URL(Astro.url.pathname, 'https://engineering-portfolio.vercel.app');
+const siteSettings = await getGeneratedSiteSettings();
+const siteName = siteSettings?.siteName ?? 'Jainavaneeth Kumarashankar';
+const titleTemplate = Astro.props.title ?? `${siteName} — Engineering Portfolio`;
+const title = titleTemplate.replaceAll('Jainavaneeth Kumarashankar', siteName);
+const description = Astro.props.description ?? siteSettings?.siteDescription ?? 'Mechanical engineering, robotics, embedded systems, electronics, and software projects.';
+const image = Astro.props.image ?? siteSettings?.socialImage ?? '/og-default.svg';
+const siteOrigin = import.meta.env.PUBLIC_SITE_URL ?? 'https://engineering-portfolio.vercel.app';
+const canonical = new URL(Astro.url.pathname, siteOrigin);
 ---
 
 <!doctype html>
@@ -29,6 +32,7 @@ const canonical = new URL(Astro.url.pathname, 'https://engineering-portfolio.ver
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={siteName} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />

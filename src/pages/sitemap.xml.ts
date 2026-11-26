@@ -1,9 +1,11 @@
 import type { APIRoute } from 'astro';
-import { getCollection } from 'astro:content';
+import { getPublicArticles, getPublicProjects } from '../lib/cms/public-content';
+
+export const prerender = true;
 
 export const GET: APIRoute = async () => {
-  const projects = await getCollection('projects');
-  const posts = (await getCollection('blog')).filter((post) => !post.data.draft);
+  const projects = await getPublicProjects();
+  const posts = (await getPublicArticles()).filter((post) => !post.data.draft);
   const urls = [
     '',
     '/projects/',
