@@ -76,7 +76,7 @@ Edit an existing `.mdx` file in `content/projects/` or `content/blog/`. Change `
 
 ## Admin Media Library
 
-The owner-only `/admin/media` page stores uploaded images in Supabase Storage. The server validates and decodes each upload, creates WebP responsive variants, and keeps the original out of the public bucket. A public image must be explicitly published before a published page can use it. The browser talks only to same-origin admin API routes; the Supabase service role key stays on the server.
+The owner-only `/admin/media` page stores uploaded images in Supabase Storage. The server validates and decodes each upload, creates WebP responsive variants, and keeps the original out of the public bucket. Large source screenshots are optimized in the browser before upload so their request stays below Vercel's [4.5 MB function request limit](https://vercel.com/docs/functions/limitations); the 12 MB source image limit is unchanged. A public image must be explicitly published before a published page can use it. The browser talks only to same-origin admin API routes; the Supabase service role key stays on the server.
 
 Set `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` in the server environment. Apply the media schema migrations in order, including `20261127010000_extend_cms_media_assignments.sql`, before opening the library. Do not edit migrations that have already been applied; add a new migration for later schema changes. The service role key must never use a `PUBLIC_` prefix.
 

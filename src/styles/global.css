@@ -550,26 +550,28 @@ section{
 }
 .atlas-home-hero:before{inset:1% -2% 7%;background:radial-gradient(ellipse at 76% 44%,rgba(69,199,192,.08),transparent 40%),radial-gradient(ellipse at 25% 42%,rgba(115,103,184,.1),transparent 40%)}
 .atlas-hero-heading .eyebrow{margin:0}
+.atlas-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .atlas-hero-heading .home-name{margin-top:14px}
-.atlas-hero-stage{display:grid;grid-template-columns:minmax(260px,.72fr) minmax(0,1.28fr);gap:clamp(18px,3vw,42px);align-items:center;min-width:0}
-.atlas-portrait{width:100%;max-width:410px;aspect-ratio:4/5;justify-self:center;overflow:hidden;border-radius:44% 44% 18px 18px;background:linear-gradient(145deg,#13243a,#091421)}
+.atlas-hero-stage{display:grid;grid-template-columns:minmax(340px,.88fr) minmax(0,1.12fr);gap:clamp(20px,3vw,42px);align-items:center;min-width:0}
+.home-page .project-globe{padding:0}
+.atlas-profile-column{width:100%;max-width:470px;justify-self:center}
+.atlas-portrait{width:100%;max-width:430px;aspect-ratio:4/5;justify-self:center;overflow:hidden;border-radius:44% 44% 18px 18px;background:linear-gradient(145deg,#13243a,#091421)}
 .atlas-portrait>img{width:100%;height:100%;object-fit:cover}
 .atlas-portrait .home-portrait-caption{left:clamp(18px,3vw,34px);right:clamp(18px,3vw,34px);bottom:clamp(20px,3vw,34px)}
 .atlas-portrait .home-portrait-caption:before{content:"";position:absolute;inset:-60px -30px -28px;z-index:-1;background:linear-gradient(180deg,transparent,rgba(5,12,22,.92))}
 .atlas-portrait .home-portrait-caption strong{font-size:clamp(2.3rem,5vw,4rem)}
-.atlas-hero-copy{max-width:1040px;margin:0 auto;width:100%}
-.atlas-hero-copy h1{max-width:22ch;margin:0 0 12px;font:700 clamp(2rem,4vw,3.5rem)/1.05 var(--display);letter-spacing:-.06em}
-.atlas-hero-copy h1 em{font-style:normal;color:#c9c4ef;background:linear-gradient(100deg,#eeeefa,#b4addd 53%,#82c8c8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.atlas-hero-copy .home-intro{max-width:75ch;font-size:clamp(.94rem,1.2vw,1.05rem)}
-.atlas-hero-copy .home-actions{margin-top:20px}
-.atlas-hero-copy .home-contact-links{margin-top:20px}
+.atlas-profile-actions{justify-content:center;gap:9px;margin-top:17px}
+.atlas-profile-actions .button{min-height:44px;padding:10px 13px;font-size:.62rem}
+.atlas-profile-actions .home-about-link{font-size:.62rem}
+.atlas-profile-links{justify-content:center;gap:14px;margin-top:13px;font-size:.57rem}
+.atlas-profile-links .home-contact-label{width:auto}
 .atlas-home-hero .hero-bottom-note{margin-top:2px}
 
 .project-globe{position:relative;z-index:1;min-width:0;width:100%;overflow:hidden;border:1px solid rgba(145,164,184,.16);border-radius:16px;background:radial-gradient(ellipse at 52% 42%,rgba(28,44,69,.65),rgba(6,13,23,.88) 70%);box-shadow:0 24px 70px rgba(1,7,16,.22),inset 0 0 55px rgba(69,199,192,.025)}
 .globe-heading{position:absolute;z-index:4;top:17px;left:19px;right:19px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;pointer-events:none}
 .globe-heading>div{display:grid;gap:5px}.globe-heading .eyebrow,.globe-heading p,.globe-status{font: .57rem var(--mono);letter-spacing:.1em;color:rgba(190,204,219,.64)}
 .globe-heading p{margin:0;color:#d5dce6}.globe-status{display:flex;align-items:center;gap:7px}.globe-status i{width:6px;height:6px;border-radius:50%;background:#65bebb;box-shadow:0 0 10px rgba(101,190,187,.5)}
-.globe-stage{position:relative;aspect-ratio:1.12;min-height:390px;max-height:690px;overflow:hidden;touch-action:pan-y;cursor:grab;user-select:none}
+.globe-stage{position:relative;aspect-ratio:1.2;min-height:360px;max-height:620px;overflow:hidden;touch-action:pan-y;cursor:grab;user-select:none}
 .globe-stage:active{cursor:grabbing}.globe-canvas{position:absolute;inset:0;width:100%;height:100%}
 .globe-pin-layer{position:absolute;inset:0;pointer-events:none}
 .globe-pin{position:absolute;transform:translate(-50%,-50%);display:grid;place-items:center;width:34px;height:34px;border:0;border-radius:50%;background:transparent;pointer-events:auto;cursor:pointer}

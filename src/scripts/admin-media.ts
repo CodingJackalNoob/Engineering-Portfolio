@@ -32,6 +32,9 @@ const assignmentDirty = new WeakSet<HTMLElement>();
 const byId = <T extends HTMLElement>(id: string) => document.getElementById(id) as T | null;
 const formatBytes = (bytes: number) => bytes < 1024 * 1024 ? `${(bytes / 1024).toFixed(0)} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 const formatDate = (value: string) => value ? new Date(value).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'Date unavailable';
+const MAX_SOURCE_BYTES = 12 * 1024 * 1024;
+const MAX_FUNCTION_UPLOAD_BYTES = 4 * 1024 * 1024;
+const SUPPORTED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif']);
 
 function showLibraryMessage(message: string, error = false) {
   const status = byId<HTMLElement>('media-message');
@@ -42,9 +45,55 @@ function showLibraryMessage(message: string, error = false) {
 }
 
 async function readJson<T>(response: Response): Promise<T & { error?: string; warning?: string }> {
-  const body = (response.status === 204 ? {} : await response.json()) as { error?: string; warning?: string } & Partial<T>;
+  let raw: unknown = {};
+  if (response.status !== 204) {
+    const contentType = response.headers.get('content-type') ?? '';
+    if (contentType.includes('application/json')) raw = await response.json();
+    else {
+      const text = await response.text();
+      if (response.status === 413 || text.includes('FUNCTION_PAYLOAD_TOO_LARGE')) {
+        throw new Error('This image exceeded the hosting upload limit. Large PNG screenshots are optimized automatically; try a screenshot under 12 MB.');
+      }
+      throw new Error(`The media server returned an unexpected response (${response.status}).`);
+    }
+  }
+  const body = raw as { error?: string; warning?: string } & Partial<T>;
   if (!response.ok) throw new Error(body.warning ?? body.error ?? 'Media request failed.');
   return body as T & { error?: string; warning?: string };
+}
+
+async function prepareUploadFile(file: File) {
+  if (!SUPPORTED_IMAGE_TYPES.has(file.type)) throw new Error(`${file.name} is not a supported JPEG, PNG, WebP, or AVIF image.`);
+  if (file.size > MAX_SOURCE_BYTES) throw new Error(`${file.name} is ${formatBytes(file.size)}. The source image limit is 12 MB.`);
+  if (file.size <= MAX_FUNCTION_UPLOAD_BYTES) return file;
+
+  let bitmap: ImageBitmap;
+  try { bitmap = await createImageBitmap(file); }
+  catch { throw new Error(`${file.name} could not be decoded by this browser. Try exporting it again as PNG.`); }
+  try {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d', { alpha: true });
+    if (!context) throw new Error('This browser cannot optimize the selected screenshot.');
+    const attempts = [
+      { width: 2200, quality: .92 },
+      { width: 2000, quality: .89 },
+      { width: 1800, quality: .86 },
+    ];
+    for (const attempt of attempts) {
+      const scale = Math.min(1, attempt.width / Math.max(bitmap.width, bitmap.height));
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/webp', attempt.quality));
+      if (blob?.type === 'image/webp' && blob.size <= MAX_FUNCTION_UPLOAD_BYTES) {
+        return new File([blob], file.name, { type: 'image/webp', lastModified: file.lastModified });
+      }
+    }
+  } finally {
+    bitmap.close();
+  }
+  throw new Error(`${file.name} could not be reduced below the server upload limit. Try a smaller screenshot.`);
 }
 
 function renderLibrary(items: MediaItem[]) {
@@ -176,7 +225,7 @@ async function loadLibrary() {
     const usage = byId<HTMLSelectElement>('media-usage-filter')?.value ?? 'all';
     if (usage === 'used' || usage === 'unused') params.set('usage', usage);
     else if (usage !== 'all') params.set('usageType', usage);
-    const result = await readJson<{ items: MediaItem[]; folders: string[] }>(await fetch(`/api/admin/media/?${params}`));
+    const result = await readJson<{ items: MediaItem[]; folders: string[]; warning?: string }>(await fetch(`/api/admin/media/?${params}`));
     const folders = byId<HTMLSelectElement>('media-folder-filter');
     const current = folders?.value ?? 'all';
     if (folders) {
@@ -185,6 +234,7 @@ async function loadLibrary() {
       folders.value = result.folders.includes(current) ? current : 'all';
     }
     renderLibrary(result.items);
+    if (result.warning) showLibraryMessage(result.warning);
   } catch (error) {
     library.textContent = error instanceof Error ? error.message : 'Could not load media.';
     library.classList.add('is-error');
@@ -199,7 +249,20 @@ function initializeLibrary() {
   const library = byId<HTMLElement>('media-library');
   if (!form || form.dataset.mediaReady) return;
   form.dataset.mediaReady = 'true';
-  const updateLabel = () => { if (dropLabel) dropLabel.textContent = input?.files?.length ? `${input.files.length} image${input.files.length === 1 ? '' : 's'} selected` : 'Drop images here or browse'; };
+  const updateLabel = () => {
+    const files = [...(input?.files ?? [])];
+    const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
+    if (dropLabel) {
+      dropLabel.textContent = files.length === 1
+        ? `${files[0].name} · ${formatBytes(files[0].size)}`
+        : files.length ? `${files.length} images · ${formatBytes(totalBytes)} total` : 'Drop images here or browse';
+    }
+    const tooLarge = files.find((file) => file.size > MAX_SOURCE_BYTES);
+    const unsupported = files.find((file) => !SUPPORTED_IMAGE_TYPES.has(file.type));
+    if (tooLarge) showLibraryMessage(`${tooLarge.name} is ${formatBytes(tooLarge.size)}. The per-image source limit is 12 MB.`, true);
+    else if (unsupported) showLibraryMessage(`${unsupported.name} is not a supported JPEG, PNG, WebP, or AVIF image.`, true);
+    else if (files.length) showLibraryMessage('Large PNG screenshots are converted to optimized WebP before upload so they fit the hosting request limit.');
+  };
   input?.addEventListener('change', updateLabel);
   dropzone?.addEventListener('dragover', (event) => { event.preventDefault(); dropzone.classList.add('is-dragging'); });
   dropzone?.addEventListener('dragleave', (event) => { if (!dropzone.contains(event.relatedTarget as Node)) dropzone.classList.remove('is-dragging'); });
@@ -213,13 +276,24 @@ function initializeLibrary() {
     event.preventDefault();
     const files = [...(input?.files ?? [])];
     if (!files.length) return;
+    const invalidFile = files.find((file) => file.size > MAX_SOURCE_BYTES || !SUPPORTED_IMAGE_TYPES.has(file.type));
+    if (invalidFile) {
+      updateLabel();
+      return;
+    }
     showLibraryMessage(`Uploading ${files.length} image${files.length === 1 ? '' : 's'}…`);
     const values = new FormData(form);
     try {
       for (const file of files) {
+        showLibraryMessage(file.size > MAX_FUNCTION_UPLOAD_BYTES ? `Optimizing ${file.name} for upload…` : `Uploading ${file.name}…`);
+        const uploadFile = await prepareUploadFile(file);
         const payload = new FormData();
-        payload.set('file', file); payload.set('alt', String(values.get('alt') ?? '')); payload.set('caption', String(values.get('caption') ?? '')); payload.set('folder', String(values.get('folder') ?? ''));
-        await readJson(await fetch('/api/admin/media/', { method: 'POST', body: payload }));
+        payload.set('file', uploadFile); payload.set('alt', String(values.get('alt') ?? '')); payload.set('caption', String(values.get('caption') ?? '')); payload.set('folder', String(values.get('folder') ?? ''));
+        try {
+          await readJson(await fetch('/api/admin/media/', { method: 'POST', body: payload }));
+        } catch (error) {
+          throw new Error(`${file.name}: ${error instanceof Error ? error.message : 'Upload failed.'}`);
+        }
       }
       form.reset(); updateLabel(); showLibraryMessage(`Uploaded ${files.length} image${files.length === 1 ? '' : 's'}.`); await loadLibrary();
     } catch (error) { showLibraryMessage(error instanceof Error ? error.message : 'Image upload failed.', true); await loadLibrary(); }

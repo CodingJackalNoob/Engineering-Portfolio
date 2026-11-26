@@ -10,6 +10,11 @@ export const prerender = false;
 const PRIVATE_BUCKET = 'cms-media-private';
 const PUBLIC_BUCKET = 'portfolio-media';
 const mediaColumns = 'id,bucket,storage_path,original_name,content_type,size_bytes,alt,caption,folder,width,height,variants,created_at,updated_at';
+const MEDIA_MIGRATIONS_REQUIRED = 'The media database is not installed. Apply the SQL files in supabase/migrations/ to the configured Supabase project.';
+
+function isMissingTable(error: { code?: string; message?: string }, table: string) {
+  return (error.code === 'PGRST205' || error.code === '42P01') && error.message?.includes(table);
+}
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -67,14 +72,18 @@ export const GET: APIRoute = async ({ request, cookies, url }) => {
     .limit(500);
   if (error) {
     console.error('CMS media query failed:', error.message);
-    return json({ error: 'Could not load media records.' }, 503);
+    return json({ error: isMissingTable(error, 'cms_media') ? MEDIA_MIGRATIONS_REQUIRED : 'Could not load media records.' }, 503);
   }
 
   const { data: assignments, error: assignmentsError } = await owner.client.from('cms_media_assignments')
     .select('media_id,owner_type,owner_id,field_key,position')
     .order('owner_type')
     .limit(2000);
-  if (assignmentsError) {
+  let assignmentWarning: string | undefined;
+  if (assignmentsError && isMissingTable(assignmentsError, 'cms_media_assignments')) {
+    console.error('CMS media assignment table is missing:', assignmentsError.message);
+    assignmentWarning = 'Media uploads are available, but page assignments and usage filters need the latest Supabase migration.';
+  } else if (assignmentsError) {
     console.error('CMS media usage query failed:', assignmentsError.message);
     return json({ error: 'Could not load media usage information. Verify that the media assignment migration is applied.' }, 503);
   }
@@ -93,9 +102,9 @@ export const GET: APIRoute = async ({ request, cookies, url }) => {
       .map(async (item) => {
         const uses = (assignments ?? []).filter((assignment) => assignment.media_id === item.id);
         const matchingUses = uses.filter((assignment) => !usageType || usageType === 'all' || assignment.owner_type === usageType);
-        if (usage === 'used' && !matchingUses.length) return null;
-        if (usage === 'unused' && uses.length) return null;
-        if (usageType && usageType !== 'all' && !matchingUses.length) return null;
+        if (!assignmentWarning && usage === 'used' && !matchingUses.length) return null;
+        if (!assignmentWarning && usage === 'unused' && uses.length) return null;
+        if (!assignmentWarning && usageType && usageType !== 'all' && !matchingUses.length) return null;
         const urls = await resolveMediaUrls(owner.client, item);
         return { ...item, ...urls, uses };
       }));
@@ -104,7 +113,7 @@ export const GET: APIRoute = async ({ request, cookies, url }) => {
     return json({ error: 'Could not create one or more media previews.' }, 503);
   }
 
-  return json({ items: items.filter((item) => item !== null), folders: [...new Set((data ?? []).map((item) => item.folder))].sort() });
+  return json({ items: items.filter((item) => item !== null), folders: [...new Set((data ?? []).map((item) => item.folder))].sort(), warning: assignmentWarning });
 };
 
 export const POST: APIRoute = async ({ request, cookies }) => {
@@ -167,7 +176,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const { error: cleanupError } = await owner.client.storage.from(PRIVATE_BUCKET).remove(stored.uploaded);
     if (cleanupError) console.error('Failed to clean up image upload after metadata error:', cleanupError.message);
     console.error('CMS media metadata insert failed:', insertError.message);
-    return json({ error: 'Could not save image metadata.' }, 503);
+    return json({ error: isMissingTable(insertError, 'cms_media') ? MEDIA_MIGRATIONS_REQUIRED : 'Could not save image metadata.' }, 503);
   }
 
   await writeCmsActivity(owner.client, {

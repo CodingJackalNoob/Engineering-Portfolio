@@ -12,6 +12,9 @@ const json = (body: unknown, status = 200) =>
     headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'private, no-store' },
   });
 
+const isMissingAssignmentTable = (error: { code?: string; message?: string }) =>
+  (error.code === 'PGRST205' || error.code === '42P01') && error.message?.includes('cms_media_assignments');
+
 async function authorize(request: Request, cookies: Parameters<typeof getAdminSession>[1]) {
   const session = await getAdminSession(request, cookies);
   if (!session.ok) return { ok: false as const, response: json({ error: 'Admin authorization is required.' }, session.status) };
@@ -31,7 +34,7 @@ async function loadAssignments(
   if (filters.ownerId) query = query.eq('owner_id', filters.ownerId);
   if (filters.fieldKey) query = query.eq('field_key', filters.fieldKey);
   const { data: assignments, error } = await query.limit(500);
-  if (error) throw new Error(`Could not load media assignments: ${error.message}`);
+  if (error) throw Object.assign(new Error(`Could not load media assignments: ${error.message}`), { code: error.code });
   const ids = [...new Set((assignments ?? []).map((assignment) => assignment.media_id))];
   if (!ids.length) return [];
 
@@ -61,7 +64,9 @@ export const GET: APIRoute = async ({ request, cookies, url }) => {
     return json({ items });
   } catch (error) {
     console.error('CMS media assignment query failed:', error instanceof Error ? error.message : 'unknown error');
-    return json({ error: 'Could not load media assignments.' }, 503);
+    return json({ error: error instanceof Error && isMissingAssignmentTable(error as Error & { code?: string; message?: string })
+      ? 'Media assignments are not installed. Apply the latest SQL migration in supabase/migrations/.'
+      : 'Could not load media assignments.' }, 503);
   }
 };
 

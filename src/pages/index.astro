@@ -61,35 +61,34 @@ const photoSlots = [
       <header class="atlas-hero-heading">
         <div class="eyebrow">// curious by design · learning by building</div>
         <p class="home-name">Jainavaneeth Kumarashankar <span>ASPIRING ENGINEER</span></p>
+        <h1 class="atlas-sr-only">Engineering portfolio by Jainavaneeth Kumarashankar</h1>
       </header>
       <div class="atlas-hero-stage">
-        <figure class="home-hero-visual atlas-portrait">
-        {heroAssignment
-          ? <ResponsiveMediaImage assignment={heroAssignment} loading="eager" fetchpriority="high" sizes="(max-width: 680px) 78vw, 440px" />
-          : portraitSrc
-          ? <img src={portraitSrc} alt={portraitAlt} fetchpriority="high" />
-          : <div class="home-portrait-placeholder" role="img" aria-label="Portrait placeholder. Add jai-portrait.jpg to public/images/about."><span>JK</span></div>}
-        <figcaption class="home-portrait-caption">
-          <span class="eyebrow">MECHANICAL + EMBEDDED SYSTEMS</span>
-          <strong>Jai<span aria-hidden="true">.</span></strong>
-        </figcaption>
-        </figure>
+        <div class="atlas-profile-column">
+          <figure class="home-hero-visual atlas-portrait">
+            {heroAssignment
+              ? <ResponsiveMediaImage assignment={heroAssignment} loading="eager" fetchpriority="high" sizes="(max-width: 680px) 78vw, 440px" />
+              : portraitSrc
+              ? <img src={portraitSrc} alt={portraitAlt} fetchpriority="high" />
+              : <div class="home-portrait-placeholder" role="img" aria-label="Portrait placeholder. Add jai-portrait.jpg to public/images/about."><span>JK</span></div>}
+            <figcaption class="home-portrait-caption">
+              <span class="eyebrow">MECHANICAL + EMBEDDED SYSTEMS</span>
+              <strong>Jai<span aria-hidden="true">.</span></strong>
+            </figcaption>
+          </figure>
+          <nav class="home-actions atlas-profile-actions" aria-label="Explore the portfolio">
+            <a class="button primary" data-magnetic href="/projects/">Explore projects <span aria-hidden="true">↗</span></a>
+            <a class="button" data-magnetic href="/blog/">Engineering journal <span aria-hidden="true">↗</span></a>
+            <a class="home-about-link" href="/about/">A little about me <span aria-hidden="true">→</span></a>
+          </nav>
+          <nav class="home-contact-links atlas-profile-links" aria-label="Contact and profile links">
+            <span class="home-contact-label">FIND ME</span>
+            <a href="https://docs.google.com/document/d/15bTIqRBPBd6BytwSrfBseb7gckVknX4qZqFh-7cwzYg/edit?tab=t.0" target="_blank" rel="noopener noreferrer">Resume <span aria-hidden="true">↗</span></a>
+            <a href="https://github.com/CodingJackalNoob" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+            <a href="mailto:jainavaneeth@gmail.com">Email <span aria-hidden="true">↗</span></a>
+          </nav>
+        </div>
         <ProjectGlobe projects={globeProjects} />
-      </div>
-      <div class="atlas-hero-copy">
-        <h1>How does it work? <em>Let’s find out.</em></h1>
-        <p class="home-intro">I’m drawn to the moment an idea starts taking shape: a mechanism on the bench, a circuit on the board, a few lines of code making something move. I’m an aspiring engineer exploring robotics, mechanical design, embedded systems, electronics, and software—one experiment at a time.</p>
-        <nav class="home-actions" aria-label="Explore the portfolio">
-          <a class="button primary" data-magnetic href="/projects/">Explore projects <span aria-hidden="true">↗</span></a>
-          <a class="button" data-magnetic href="/blog/">Engineering journal <span aria-hidden="true">↗</span></a>
-          <a class="home-about-link" href="/about/">A little about me <span aria-hidden="true">→</span></a>
-        </nav>
-        <nav class="home-contact-links" aria-label="Contact and profile links">
-          <span class="home-contact-label">FIND ME</span>
-          <a href="https://docs.google.com/document/d/15bTIqRBPBd6BytwSrfBseb7gckVknX4qZqFh-7cwzYg/edit?tab=t.0" target="_blank" rel="noopener noreferrer">Resume <span aria-hidden="true">↗</span></a>
-          <a href="https://github.com/CodingJackalNoob" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
-          <a href="mailto:jainavaneeth@gmail.com">Email <span aria-hidden="true">↗</span></a>
-        </nav>
       </div>
       <div class="hero-bottom-note"><span>AN OPEN NOTEBOOK, NOT A FINISHED BLUEPRINT</span><span aria-hidden="true">SCROLL TO EXPLORE ↓</span></div>
     </section>
