@@ -11,7 +11,6 @@ export const GET: APIRoute = async () => {
     '/projects/',
     '/blog/',
     '/about/',
-    '/contact/',
     ...projects.map((project) => `/projects/${project.data.slug ?? project.id}/`),
     ...posts.map((post) => `/blog/${post.data.slug ?? post.id}/`),
   ];

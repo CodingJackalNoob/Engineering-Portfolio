@@ -1,12 +1,19 @@
 ---
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import { getGeneratedAbout } from '../lib/cms/generated-settings';
 import { getPublicProjects } from '../lib/cms/public-content';
 import '../styles/global.css';
 
 export const prerender = true;
 
+const about = await getGeneratedAbout();
+const localPortraitPath = path.join(process.cwd(), 'public', 'images', 'about', 'jai-portrait.jpg');
+const portraitSrc = about?.profilePhoto || (existsSync(localPortraitPath) ? '/images/about/jai-portrait.jpg' : undefined);
+const portraitAlt = about?.profilePhotoAlt || 'Portrait of Jai';
 const projects = (await getPublicProjects()).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 const inProgressProjects = projects.filter((project) => project.data.status === 'In Progress');
 const projectCards = (inProgressProjects.length ? inProgressProjects : projects.filter((project) => project.data.featured)).slice(0, 3);
@@ -35,17 +42,22 @@ const photoSlots = [
           <a class="button" data-magnetic href="/blog/">Engineering journal <span aria-hidden="true">↗</span></a>
           <a class="home-about-link" href="/about/">A little about me <span aria-hidden="true">→</span></a>
         </nav>
+        <nav class="home-contact-links" aria-label="Contact and profile links">
+          <span class="home-contact-label">FIND ME</span>
+          <a href="https://docs.google.com/document/d/15bTIqRBPBd6BytwSrfBseb7gckVknX4qZqFh-7cwzYg/edit?tab=t.0" target="_blank" rel="noopener noreferrer">Resume <span aria-hidden="true">↗</span></a>
+          <a href="https://github.com/CodingJackalNoob" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+          <a href="mailto:jainavaneeth@gmail.com">Email <span aria-hidden="true">↗</span></a>
+        </nav>
       </div>
-      <div class="home-hero-visual" role="img" aria-label="An abstract engineering sketch linking mechanisms, signals, and systems">
-        <div class="visual-caption"><span>FIELD STUDY / 001</span><span>IDEAS IN MOTION</span></div>
-        <div class="orbit orbit--outer"></div>
-        <div class="orbit orbit--inner"></div>
-        <div class="orbit-core"><span>MAKE</span><span>·</span><span>UNDERSTAND</span></div>
-        <span class="orbit-node orbit-node--one">MECHANISM</span>
-        <span class="orbit-node orbit-node--two">SIGNAL</span>
-        <span class="orbit-node orbit-node--three">SYSTEM</span>
-        <div class="visual-coordinates">SYSTEMS / IN PROGRESS<br />BUILD / TEST / LEARN</div>
-      </div>
+      <figure class="home-hero-visual">
+        {portraitSrc
+          ? <img src={portraitSrc} alt={portraitAlt} fetchpriority="high" />
+          : <div class="home-portrait-placeholder" role="img" aria-label="Portrait placeholder. Add jai-portrait.jpg to public/images/about."><span>JK</span></div>}
+        <figcaption class="home-portrait-caption">
+          <span class="eyebrow">HELLO THERE</span>
+          <strong>I’m Jai<span aria-hidden="true">.</span></strong>
+        </figcaption>
+      </figure>
       <div class="hero-bottom-note"><span>AN OPEN NOTEBOOK, NOT A FINISHED BLUEPRINT</span><span aria-hidden="true">SCROLL TO EXPLORE ↓</span></div>
     </section>
     <div class="home-photo-strip" aria-label="Personal photo collection">

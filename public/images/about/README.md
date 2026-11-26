@@ -2,6 +2,8 @@
 
 The homepage gallery intentionally contains labeled placeholders, not sample or generated personal photos.
 
+To add your homepage portrait, copy it here as `jai-portrait.jpg`. The homepage will use it automatically. You can also set a profile photo in the About section of the CMS.
+
 To add a photo:
 
 1. Copy your image into this folder.
