@@ -17,6 +17,8 @@ const json = (body: { error: string }, status: number, headers?: Record<string, 
     headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...headers },
   });
 
+const ADMIN_LOGIN_RATE_LIMIT_WINDOW_SECONDS = 60;
+
 function isRateLimitDecision(value: unknown): value is { allowed: boolean; retry_after_seconds: number } {
   if (!Array.isArray(value) || value.length !== 1) return false;
   const decision: unknown = value[0];
@@ -28,7 +30,10 @@ function isRateLimitDecision(value: unknown): value is { allowed: boolean; retry
     'retry_after_seconds' in decision &&
     typeof decision.retry_after_seconds === 'number' &&
     Number.isSafeInteger(decision.retry_after_seconds) &&
-    decision.retry_after_seconds >= 0
+    (decision.allowed
+      ? decision.retry_after_seconds === 0
+      : decision.retry_after_seconds >= 1 &&
+        decision.retry_after_seconds <= ADMIN_LOGIN_RATE_LIMIT_WINDOW_SECONDS)
   );
 }
 
@@ -85,7 +90,7 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress, url }) =
     return json(
       { error: 'Too many sign-in attempts. Please wait before trying again.' },
       429,
-      { 'Retry-After': Math.max(1, rateLimitResponse.data.retry_after_seconds).toString() },
+      { 'Retry-After': rateLimitResponse.data.retry_after_seconds.toString() },
     );
   }
 

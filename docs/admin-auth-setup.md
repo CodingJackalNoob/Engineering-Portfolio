@@ -24,7 +24,7 @@ Copy `.env.example` to `.env` for local development and set the values below. Ad
 
 Generate the session secret locally with `openssl rand -base64 48`; store it only in local environment configuration and Vercel's encrypted environment-variable settings. Login is intentionally unavailable when Supabase, session signing, site-origin, or the database-backed rate limiter is unavailable.
 
-Login attempts are limited in the Supabase database using an atomic PostgreSQL function: 20 attempts per IP address and 5 attempts per normalized account email in a rolling 15-minute window. The limiter stores only HMACs of those identifiers, requires the Supabase service-role key, and fails closed if the database or limiter function is unavailable. Apply the rate-limiter migration along with the other Supabase migrations before enabling admin sign-in.
+Login attempts are limited in the Supabase database using an atomic PostgreSQL function: 20 attempts per IP address and 5 attempts per normalized account email in a rolling 1-minute window. The limiter stores only HMACs of those identifiers, requires the Supabase service-role key, and fails closed if the database or limiter function is unavailable. Apply all Supabase migrations in filename order before enabling admin sign-in.
 
 ## Connect persistent content
 
